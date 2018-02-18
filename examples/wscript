@@ -1,0 +1,64 @@
+## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+#def build(bld):
+#   obj = bld.create_ns3_program('lr-wpan-packet-print', ['lr-wpan'])
+#   obj.source = 'lr-wpan-packet-print.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-phy-test', ['lr-wpan'])
+#   obj.source = 'lr-wpan-phy-test.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-data', ['lr-wpan'])
+#   obj.source = 'lr-wpan-data.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-error-model-plot', ['lr-wpan', 'stats'])
+#   obj.source = 'lr-wpan-error-model-plot.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-error-distance-plot', ['lr-wpan', 'stats'])
+#   obj.source = 'lr-wpan-error-distance-plot.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-header-print', ['lr-wpan', 'stats'])
+#   obj.source = 'lr-wpan-header-print.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-simple', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-simple.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-channel-hopping', ['lr-wpan'])
+#   obj.source = 'lr-wpan-channel-hopping.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-interference-simple', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-interference-simple.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-energy', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-energy.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-simulation-example', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-simulation-example.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-nakagami', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-nakagami.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-interference', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-interference.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-twist-test-bed', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-twist-test-bed.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-twist-test-bed-test', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-twist-test-bed-test.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-retransmission', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-retransmission.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-learning-test', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-learning-test.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-learning-simulation', ['lr-wpan'])
+#   obj.source = 'lr-wpan-tsch-learning-simulation.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-tsch-test', ['lr-wpan','sixlowpan','internet','mobility','applications'])
+#   obj.source = 'lr-wpan-tsch-test.cc'
+
+#   obj = bld.create_ns3_program('lr-wpan-ping', ['lr-wpan','sixlowpan','internet','mobility','applications'])
+#   obj.source = 'lr-wpan-ping.cc'
+
+

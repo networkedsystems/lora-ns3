@@ -1,0 +1,38 @@
+LoraWAN partial network implementation 
+-------------------------------------
+
+Introduction
+============
+LoRaWAN is a long range wireless protocol with interesting features such as:
+	* long range
+	* spread spectrum (enabling to receive multiple packets at the same time)
+	* Scalable data rate
+				- not only to increase the range, but also to schedule dynamically 
+
+Support
+=======
+
+Parts that are supported: 
+	* Device class A 
+	
+Commands that are supported
+	* LinkAdrReq
+	* LinkAdrAns
+
+
+
+Topology
+========
+
+Device									Gateway														Network
+------									-------														-------
+	
+LoRaApplication					LoRaSinkApplication								LoRaNetwork|LoRaPowerControl
+LoRaNetDevice						LoRaNetDeviceGw	| IP layer--------IP layer (Does not matter what protocol.)				
+LoRaPhy									LoRaPhy					|
+
+----------SpectrumChannel------------
+
+Helper
+======
+

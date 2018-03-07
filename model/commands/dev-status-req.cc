@@ -19,8 +19,11 @@
  */
 
 #include "dev-status-req.h"
+#include "dev-status-ans.h"
 #include <ns3/lora-mac-command.h>
+#include <ns3/lora-phy.h>
 #include <ns3/address.h>
+#include <ns3/energy-source.h>
 
 namespace ns3 {
 
@@ -71,15 +74,25 @@ DevStatusReq::Serialize (Buffer::Iterator start) const
 uint32_t
 DevStatusReq::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	start.ReadU8();
+  return 1;
 }
 
 void
 DevStatusReq::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	double tempmargin = nd->GetPhy()->GetSnrLastPacket();
+	int8_t margin = tempmargin;
+	if (tempmargin > 32)
+		margin = 32;
+	else if (tempmargin < -32)
+		margin = -32;
+	// initialize with 0, this means connected with unlimited energy source.
+	uint8_t battery = 0;
+	if (nd->GetNode()->GetObject<EnergySource>())
+		battery = (nd->GetNode()->GetObject<EnergySource>()->GetEnergyFraction()*254)+1;
+	Ptr<LoRaMacCommand> command = CreateObject<DevStatusAns>(battery,margin);
+	nd->SetMacAnswer (command);
 }
 
 } //namespace ns3

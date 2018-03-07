@@ -35,6 +35,7 @@ class LinkCheckAns : public LoRaMacCommand
 public:
 
   LinkCheckAns (void);
+  LinkCheckAns (uint8_t margin, uint8_t count);
 
   ~LinkCheckAns (void);
 
@@ -46,6 +47,17 @@ public:
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
   void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
+
+	void SetMargin (uint8_t margin);
+	uint8_t GetMargin (void);
+	void SetCount (uint8_t count);
+	uint8_t GetCount (void);
+
+
+
+private:
+	uint8_t m_margin;
+	uint8_t m_count;
 
 }; //LinkCheckAns
 

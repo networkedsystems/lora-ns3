@@ -36,6 +36,7 @@ class DevStatusAns : public LoRaMacCommand
 public:
 
   DevStatusAns (void);
+  DevStatusAns (uint8_t battery, int8_t margin);
 
   ~DevStatusAns (void);
 
@@ -46,7 +47,16 @@ public:
   uint32_t GetSerializedSize (void) const;
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
-  void Execute(Ptr<LoRaNetDevice> netDevice, Address address);
+  void Execute(Ptr<LoRaNetworkApplication> app, Address address);
+
+	void SetBattery (uint8_t battery);
+	uint8_t GetBattery ();
+	void SetMargin (int8_t margin);
+	int8_t GetMargin ();
+
+private:
+	uint8_t m_battery;
+	int8_t m_margin;
 
 }; //DevStatusAns
 

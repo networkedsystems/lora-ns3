@@ -18,15 +18,15 @@
  * Author: Brecht Reyndres <brecht.reynders@esat.kuleuven.be>
  */
 
-#ifndef LORA_TSCH_NET_DEVICE_GW_H
-#define LORA_TSCH_NET_DEVICE_GW_H
+#ifndef LORA_RS_GW_NET_DEVICE_H
+#define LORA_RS_GW_NET_DEVICE_H
 
 #include <cstring>
 #include <ns3/node.h>
 #include <ns3/address.h>
 #include <ns3/net-device.h>
-#include "lora-tsch-net-device.h"
-#include "lora-net-device-gw.h"
+#include "lora-rs-net-device.h"
+#include "lora-gw-net-device.h"
 #include <ns3/callback.h>
 #include <ns3/packet.h>
 #include <ns3/traced-callback.h>
@@ -37,7 +37,7 @@
 
 namespace ns3 {
 
-  class LoRaPhyGw;
+  class LoRaGwPhy;
   class SpectrumChannel;
   class Channel;
   class SpectrumErrorModel;
@@ -53,7 +53,7 @@ namespace ns3 {
    *	-handle multiple simultaneous receptions
    * Most of the code is programmed in LoRaNetDevice, as lots of functionality is the same
    */
-  class LoRaTschNetDeviceGw : public LoRaNetDeviceGw//, public LoRaTschNetDevice
+  class LoRaRsGwNetDevice : public LoRaGwNetDevice
   {
   public:
 
@@ -70,8 +70,8 @@ namespace ns3 {
 
     static TypeId GetTypeId (void);
 
-    LoRaTschNetDeviceGw ();
-    virtual ~LoRaTschNetDeviceGw ();
+    LoRaRsGwNetDevice ();
+    virtual ~LoRaRsGwNetDevice ();
 
     void DoInitialize (void);
 
@@ -133,35 +133,6 @@ namespace ns3 {
 
     EventId m_beacon;
 
-    //Ptr<Queue> m_queue; //queue for packets to send
-    //Ptr<Node>    m_node; //node where this interface belongs to
-    //Ptr<Channel> m_channel; // channel to send on
-
-    //SettingCallback m_setting;
-    //RssiCallback m_rssi;
-    //PowerCallback m_powerCallback;
-
-    /**
-     * List of callbacks to fire if the link changes state (up or down).
-     */
-    //NetDevice::ReceiveCallback m_rxCallback;
-    //NetDevice::PromiscReceiveCallback m_promiscRxCallback;
-
-    /**
-     * List of callbacks to fire if the link changes state (up or down).
-     */
-    //GenericPhyTxStartCallback m_phyMacTxStartCallback;
-
-    /**
-     * List of callbacks to fire if the link changes state (up or down).
-     */
-    //TracedCallback<> m_linkChangeCallbacks;
-
-    //std::vector<DeviceInfo> m_deviceInfo; //list of specs to use when sending an ACK to end-device
-    //Ptr<Packet> m_currentPkt; // current packet to send as an ACK
-    //uint8_t m_delay; // delay between arrival of packet and sending the ACK
-    //Ptr<LoRaPhyGw> m_phy; //Physical layer for transmission and reception
-    //std::list<std::tuple<Address,Time,Ptr<Packet> > > m_pendingAcks;
     uint8_t m_rssiValues[16];
     uint8_t m_receptionsPerChannel[16];
     uint8_t m_availableChannels;
@@ -176,4 +147,4 @@ namespace ns3 {
 
 } // namespace ns3
 
-#endif /* LORA_TSCH_NET_DEVICE_GW_H */
+#endif /* LORA_RS_GW_NET_DEVICE_H */

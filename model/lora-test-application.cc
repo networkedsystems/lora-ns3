@@ -25,26 +25,38 @@
 #include "ns3/simulator.h"
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
-#include "lora-no-power-application.h"
+#include "lora-test-application.h"
 #include "lora-mac-header.h"
+#include "commands/link-check-ans.h"
+#include "commands/link-check-req.h"
 #include "commands/link-adr-req.h"
 #include "commands/link-adr-ans.h"
+#include "commands/duty-cycle-req.h"
+#include "commands/duty-cycle-ans.h"
+#include "commands/rx-param-setup-req.h"
+#include "commands/rx-param-setup-ans.h"
+#include "commands/dev-status-req.h"
+#include "commands/dev-status-ans.h"
+#include "commands/new-channel-req.h"
+#include "commands/new-channel-ans.h"
+#include "commands/rx-timing-setup-req.h"
+#include "commands/rx-timing-setup-ans.h"
 #include "lora-mac-command.h"
 #include "gw-trailer.h"
 
 namespace ns3 {
 
-	NS_LOG_COMPONENT_DEFINE ("LoRaNoPowerApplication");
+	NS_LOG_COMPONENT_DEFINE ("LoRaTestApplication");
 
-	NS_OBJECT_ENSURE_REGISTERED (LoRaNoPowerApplication);
+	NS_OBJECT_ENSURE_REGISTERED (LoRaTestApplication);
 
 	// Application Methods
 
 	TypeId 
-		LoRaNoPowerApplication::GetTypeId (void)
+		LoRaTestApplication::GetTypeId (void)
 		{
-			static TypeId tid = TypeId ("ns3::LoRaNoPowerApplication")
-				.AddConstructor<LoRaNoPowerApplication>()
+			static TypeId tid = TypeId ("ns3::LoRaTestApplication")
+				.AddConstructor<LoRaTestApplication>()
 				.SetParent<LoRaNetworkApplication> ()
 				.SetGroupName("LoRa")
 				;
@@ -52,33 +64,39 @@ namespace ns3 {
 		}
 
 	// \brief Application Constructor
-	LoRaNoPowerApplication::LoRaNoPowerApplication()
+	LoRaTestApplication::LoRaTestApplication()
 	{
 		NS_LOG_FUNCTION (this);
 	}
 
-	// \brief LoRaNoPowerApplication Destructor
-	LoRaNoPowerApplication::~LoRaNoPowerApplication()
+	// \brief LoRaTestApplication Destructor
+	LoRaTestApplication::~LoRaTestApplication()
 	{
 		NS_LOG_FUNCTION (this);
 	}
 
 	void
-		LoRaNoPowerApplication::DoDispose (void)
+		LoRaTestApplication::DoDispose (void)
 		{
 			NS_LOG_FUNCTION (this);
 		}
 
 	void
-		LoRaNoPowerApplication::DoInitialize (void)
+		LoRaTestApplication::DoInitialize (void)
 		{
 			Application::DoInitialize ();
 		}
 
 	void 
-		LoRaNoPowerApplication::NewPacket (Ptr<const Packet> pkt)
+		LoRaTestApplication::NewPacket (Ptr<const Packet> pkt)
 		{
 			NS_LOG_FUNCTION(this);
+			Simulator::Schedule(MilliSeconds(200),&LoRaTestApplication::DelayedNewPacket,this,pkt);
+		}
+
+	void
+		LoRaTestApplication::DelayedNewPacket(Ptr<const Packet> pkt)
+		{
 			LoRaMacHeader header;
 			pkt->PeekHeader(header);
 			NS_LOG_DEBUG(header.GetAddr ());
@@ -87,9 +105,10 @@ namespace ns3 {
 			std::list<Ptr<LoRaMacCommand>> commands = header.GetCommandList ();
 			for (std::list<Ptr<LoRaMacCommand>>::iterator it = commands.begin(); it!=commands.end();++it)
 			{
-				Ptr<LinkAdrAns> ans = DynamicCast<LinkAdrAns>(*it);
-				if (ans != 0)
-					ans->Execute(this,header.GetAddr());
+				(*it)->Execute(this,header.GetAddr());
+				//m_network->SetDelayOfDevice(header.GetAddr(),3);
+				//m_network->SetSettingsOfDevice(header.GetAddr(),1,5,8681230);
+
 			}
 			if (m_network != 0)
 			{
@@ -98,14 +117,26 @@ namespace ns3 {
 					LoRaMacHeader ans;
 					ans.SetAddr (header.GetAddr ());
 					ans.SetType (LoRaMacHeader::LORA_MAC_UNCONFIRMED_DATA_DOWN);
-					Ptr<LinkAdrReq> req = CreateObject<LinkAdrReq> (5,1,0xE000,1);
-					ans.SetMacCommand(req);
+					if (m_command != 0)
+						ans.SetMacCommand(m_command);	
+	//				Ptr<LoRaMacCommand> req = CreateObject<RxParamSetupReq> (1,5,8681230);
+//					Ptr<LoRaMacCommand> req = CreateObject<RxTimingSetupReq> (3);
+//					Ptr<LoRaMacCommand> req = CreateObject<DutyCycleReq> (0);
+//					Ptr<LoRaMacCommand> req = CreateObject<NewChannelReq> (2,8681000,0,0);
+//					Ptr<LoRaMacCommand> req = CreateObject<DevStatusReq> ();
+				//	ans.SetMacCommand(req);
+					m_command = 0;
 					Ptr<Packet> ack = Create<Packet>(0);
 					ack->AddHeader(ans);
 					m_network->Send(ack);
 				}
 			}
 		}
+
+	void LoRaTestApplication::SetMacAnswer (Ptr<LoRaMacCommand> command)
+	{
+		m_command = command;
+	}
 
 } // namespace ns3
 

@@ -71,15 +71,14 @@ DutyCycleAns::Serialize (Buffer::Iterator start) const
 uint32_t
 DutyCycleAns::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	m_cid = static_cast<LoRaMacCommandCid>(start.ReadU8 ());
+  return 1;
 }
 
 void
-DutyCycleAns::Execute (Ptr<LoRaNetDevice> nd,Address address)
+DutyCycleAns::Execute (Ptr<LoRaNetworkApplication> app,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	std::cout << "Acked" << std::endl;
 }
 
 } //namespace ns3

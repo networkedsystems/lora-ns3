@@ -17,7 +17,6 @@
  *
  * Author: Brecht Reynders <brecht.reynders@esat.kuleuven.be>
  */
-#include <ns3/lora-net-device-gw.h>
 #include "link-adr-ans.h"
 #include <ns3/lora-mac-command.h>
 #include <ns3/address.h>
@@ -99,10 +98,8 @@ LinkAdrAns::Execute (Ptr<LoRaNetworkApplication> app, Address address)
 {
 	if (app !=0)
 	{
-		NS_LOG_DEBUG("HALLOKES");
 		if (m_power)
 		{
-			NS_LOG_DEBUG("HALLOKES");
 			app->ConfirmPower (address);
 		}
 		if (m_datarate)

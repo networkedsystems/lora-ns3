@@ -28,9 +28,18 @@ NS_OBJECT_ENSURE_REGISTERED (LinkCheckAns);
 
 LinkCheckAns::LinkCheckAns(void)
 {
-	
 	m_cid = LINK_CHECK;
 	m_direction = FROMBASE;
+	m_margin = 0;
+	m_count = 1;
+}
+
+LinkCheckAns::LinkCheckAns(uint8_t margin, uint8_t count)
+{
+	m_cid = LINK_CHECK;
+	m_direction = FROMBASE;
+	m_margin = margin;
+	m_count = count;
 }
 
 LinkCheckAns::~LinkCheckAns (void)
@@ -56,7 +65,7 @@ LinkCheckAns::GetInstanceTypeId (void) const
 uint32_t
 LinkCheckAns::GetSerializedSize (void) const
 {
-  return 1;
+  return 3;
 }
 
 
@@ -65,21 +74,46 @@ LinkCheckAns::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
   i.WriteU8 (m_cid);
+	i.WriteU8 (m_margin);
+	i.WriteU8 (m_count);
 }
 
 
 uint32_t
 LinkCheckAns::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+  Buffer::Iterator i = start;
+	m_cid = static_cast<LoRaMacCommandCid>(i.ReadU8 ());
+	m_margin = i.ReadU8();
+	m_count = i.ReadU8();
+  return 3;
 }
 
 void
 LinkCheckAns::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	// Do Nothing, probably, pass this to a higher layer, or use this to control the power.
+	std::cout << (uint32_t)m_margin << " " << (uint32_t)m_count << std::endl;
+}
+
+void LinkCheckAns::SetMargin (uint8_t margin)
+{
+	m_margin = margin;
+}
+uint8_t 
+LinkCheckAns::GetMargin (void)
+{
+	return m_margin;
+}
+void LinkCheckAns::SetCount (uint8_t count)
+{
+	m_count = count;
+}
+
+uint8_t 
+LinkCheckAns::GetCount (void)
+{
+	return m_count;
 }
 
 } //namespace ns3

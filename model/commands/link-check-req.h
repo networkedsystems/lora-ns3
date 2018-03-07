@@ -29,7 +29,7 @@ class LoRaNetDevice;
 
 /*
  * \ingroup lora
- * Represent the Mac Command with the Frame Control and Sequence Number fields
+ * Check a proper working connection 
  */
 class LinkCheckReq : public LoRaMacCommand
 {
@@ -47,7 +47,7 @@ public:
   virtual uint32_t GetSerializedSize (void) const;
   virtual void Serialize (Buffer::Iterator start) const;
   virtual uint32_t Deserialize (Buffer::Iterator start);
-  virtual void Execute(Ptr<LoRaNetDevice> netDevice, Address address);
+  virtual void Execute(Ptr<LoRaNetworkApplication> app, Address address);
 
 }; //LinkCheckReq
 

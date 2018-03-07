@@ -16,8 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Authors:
- *  Gary Pei <guangyu.pei@boeing.com>
- *  Tom Henderson <thomas.r.henderson@boeing.com>
+ *  Brecht Reynders <brecht.reynders@esat.kuleuven.be>
  */
 #ifndef LORA_HELPER_H
 #define LORA_HELPER_H
@@ -118,14 +117,14 @@ public:
    * \returns A container holding the added net devices.
 	 */
 	NetDeviceContainer Install (NodeContainer c);
-	NetDeviceContainer InstallTsch (NodeContainer c);
+	NetDeviceContainer InstallRs (NodeContainer c);
 	
 	/**
 	 * \param c a set of nodes
      * \returns A container holding the added net devices.
 	 */
 	NetDeviceContainer InstallGateways (NodeContainer c);
-	NetDeviceContainer InstallTschGateways (NodeContainer c);
+	NetDeviceContainer InstallRsGateways (NodeContainer c);
 
 	void AddCallbacks (std::string traceSource, CallbackBase callback);
 	void AddCallbacksGateway (std::string traceSource, CallbackBase callback);
@@ -238,6 +237,7 @@ private:
 	std::list<callbacktuple > m_gatewayCallbacks;
   std::list<callbacktuple > m_callbacks;
 	std::list<ObjectFactory > m_netApp;  //!< These are the applications installed on the network server
+	Ptr<const SpectrumModel> m_spectrumModel;
 
 };
 

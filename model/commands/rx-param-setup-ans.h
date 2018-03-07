@@ -35,6 +35,7 @@ class RxParamSetupAns : public LoRaMacCommand
 public:
 
   RxParamSetupAns (void);
+  RxParamSetupAns (bool offset, bool dr, bool channel);
 
   ~RxParamSetupAns (void);
 
@@ -45,7 +46,19 @@ public:
   uint32_t GetSerializedSize (void) const;
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
-  void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
+  void Execute(Ptr<LoRaNetworkApplication> netDevice,Address address);
+
+	void SetOffsetAck (bool ack);
+	bool GetOffsetAck ();
+	void SetDrAck (bool ack);
+	bool GetDrAck ();
+	void SetChannelAck (bool ack);
+	bool GetChannelAck ();
+
+private:
+	bool m_offsetAck;
+	bool m_drAck;
+	bool m_channelAck;
 
 }; //RxParamSetupAns
 

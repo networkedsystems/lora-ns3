@@ -25,7 +25,7 @@
 #include <ns3/lora-mac-command.h>
 
 namespace ns3 {
-class LoRaNetDevice;
+class LoRaNetworkApplication;
 
 /*
  * \ingroup lora
@@ -47,7 +47,7 @@ public:
   uint32_t GetSerializedSize (void) const;
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
-  void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
+  void Execute(Ptr<LoRaNetworkApplication> netDevice,Address address);
 
 }; //RxTimingSetupAns
 

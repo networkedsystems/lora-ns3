@@ -36,6 +36,7 @@ class NewChannelAns : public LoRaMacCommand
 public:
 
   NewChannelAns (void);
+  NewChannelAns (bool datarateOk, bool freqOk);
 
   ~NewChannelAns (void);
 
@@ -46,7 +47,17 @@ public:
   uint32_t GetSerializedSize (void) const;
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
-  void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
+  void Execute(Ptr<LoRaNetworkApplication> netDevice,Address address);
+
+	void SetDatarateOk (bool drOk);
+	bool GetDatarateOk ();
+	
+	void SetFreqOk (bool freqOk);
+	bool GetFreqOk ();
+
+private:
+	bool m_datarateOk;
+	bool m_freqOk;
 
 }; //NewChannelAns
 

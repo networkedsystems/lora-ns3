@@ -18,8 +18,8 @@
  * Author: Brecht Reynders <brecht.reynders@esat.kuleuven.be>
  */
 
-#ifndef LORA_TSCH_NET_DEVICE_H
-#define LORA_TSCH_NET_DEVICE_H
+#ifndef LORA_RS_NET_DEVICE_H
+#define LORA_RS_NET_DEVICE_H
 
 #include <cstring>
 #include <ns3/node.h>
@@ -57,14 +57,14 @@ class LoRaMacCommand;
  *    + a new packet is queued if previous one is still being transmitted
  *
  */
-class LoRaTschNetDevice : public LoRaNetDevice
+class LoRaRsNetDevice : public LoRaNetDevice
 {
 public:
 
   static TypeId GetTypeId (void);
 
-  LoRaTschNetDevice ();
-  virtual ~LoRaTschNetDevice ();
+  LoRaRsNetDevice ();
+  virtual ~LoRaRsNetDevice ();
 
 	virtual void DoInitialize (void);
 
@@ -257,4 +257,4 @@ protected:
 
 } // namespace ns3
 
-#endif /* LORA_TSCH_NET_DEVICE_H */
+#endif /* LORA_RS_NET_DEVICE_H */

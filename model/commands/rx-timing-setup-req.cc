@@ -20,16 +20,25 @@
 
 #include "rx-timing-setup-req.h"
 #include <ns3/lora-mac-command.h>
+#include <ns3/rx-timing-setup-ans.h>
 #include <ns3/address.h>
 
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (RxTimingSetupReq);
 
-RxTimingSetupReq::RxTimingSetupReq(void)
+RxTimingSetupReq::RxTimingSetupReq (void)
 {
 	m_cid = RX_TIMING;
 	m_direction = TOBASE;
+	m_delay = 0;
+}
+
+RxTimingSetupReq::RxTimingSetupReq (uint8_t del)
+{
+	m_cid = RX_TIMING;
+	m_direction = TOBASE;
+	m_delay = del;
 }
 
 RxTimingSetupReq::~RxTimingSetupReq (void)
@@ -55,7 +64,7 @@ RxTimingSetupReq::GetInstanceTypeId (void) const
 uint32_t
 RxTimingSetupReq::GetSerializedSize (void) const
 {
-  return 1;
+  return 2;
 }
 
 
@@ -64,21 +73,37 @@ RxTimingSetupReq::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
   i.WriteU8 (m_cid);
+  i.WriteU8 (m_delay);
 }
 
 
 uint32_t
 RxTimingSetupReq::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	m_cid = static_cast<LoRaMacCommandCid>(start.ReadU8 ());
+	m_delay = start.ReadU8();
+  return 2;
 }
 
 void
 RxTimingSetupReq::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	nd->SetDelay(m_delay);
+	Ptr<LoRaMacCommand> command = CreateObject<RxTimingSetupAns>();
+	nd->SetMacAnswer (command);
+}
+
+uint8_t 
+RxTimingSetupReq::GetDelay (void)
+{
+	return m_delay;
+}
+
+void
+RxTimingSetupReq::SetDelay (uint8_t delay)
+{
+	NS_ASSERT(delay < 0x10);
+	m_delay = delay;
 }
 
 } //namespace ns3

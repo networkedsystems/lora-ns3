@@ -35,6 +35,7 @@ class DutyCycleReq : public LoRaMacCommand
 public:
 
   DutyCycleReq (void);
+  DutyCycleReq (uint8_t dutyCycle);
 
   ~DutyCycleReq (void);
 
@@ -47,6 +48,10 @@ public:
   uint32_t Deserialize (Buffer::Iterator start);
   void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
 
+	void SetDutyCycle (uint8_t dutyCycle);
+	uint8_t GetDutyCycle (void);
+private:
+	uint8_t m_dutyCycle;
 }; //DutyCycleReq
 
 }; // namespace ns-3

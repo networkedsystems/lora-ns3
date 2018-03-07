@@ -112,14 +112,15 @@ public:
    * returned, it means that any model will be accepted.
    */
   Ptr<const SpectrumModel> GetRxSpectrumModel () const;
+	void SetRxSpectrumModel (Ptr<const SpectrumModel> model);
 
   /**
-   * Set the Tx power spectrum by setting channel and power
+   * Set the power spectrum by setting channel and power
    *
    * \param channeloffset number of channel used
    * \param power total radiated power
    */
-   void InitTxPowerSpectralDensity (uint32_t channeloffset, double power);
+   void InitPowerSpectralDensity ();
 
   /**
    * get the AntennaModel used by the NetDevice for reception
@@ -251,6 +252,15 @@ public:
    * \return PSD of the transceiver with the current settings
    */
   Ptr<SpectrumValue> GetTxPowerSpectralDensity (uint32_t channeloffset, double power);
+  
+	/**
+   * Get Full Transmit power spectral density for a given channel and power and the stored bandwidth and spreading
+   *
+   * \params channeloffset carrierfrequency to be used
+   * \params power to be used to transmit
+   * \return PSD of the transceiver with the current settings over the total bandwidth of the receiver.
+   */
+  Ptr<SpectrumValue> GetFullTxPowerSpectralDensity (uint32_t channeloffset, double power);
 
 	/**
 		* Return the received signal strength of the last received packet.
@@ -258,6 +268,13 @@ public:
 		* \return the rssi of the last packet.
 		*/
 	double GetRssiLastPacket (void);
+	
+	/**
+		* Return the snr of the last received packet.
+		*
+		* \return the snr of the last packet.
+		*/
+	double GetSnrLastPacket (void);
 
 	/**
 		* Check if physical layer is transmitting 
@@ -271,7 +288,7 @@ protected:
  Ptr<NetDevice> m_netDevice; //!<upper layer
  Ptr<MobilityModel> m_mobility; //!<position
  Ptr<SpectrumChannel> m_channel; //!<channel to transmit on
- Ptr<SpectrumValue> m_txPsd; //!<Current transmit psd
+ Ptr<SpectrumValue> m_rxPsd; //!<Current psd
  Ptr<AntennaModel> m_antenna; //!<antenna to be used
 
 
@@ -301,6 +318,7 @@ private:
  EventId m_event; //!< When the receiving packet is being received
  TracedValue<State> m_state; //!< state of the transceiver
  double m_lastRssi; //!< rssi of last packet
+ double m_lastSnr; //!< snr of last packet
   /**
   * Create spectrumValues for LoRa signal
   *

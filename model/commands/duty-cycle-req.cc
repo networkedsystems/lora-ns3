@@ -19,6 +19,7 @@
  */
 
 #include "duty-cycle-req.h"
+#include "duty-cycle-ans.h"
 #include <ns3/lora-mac-command.h>
 #include <ns3/address.h>
 
@@ -28,9 +29,15 @@ NS_OBJECT_ENSURE_REGISTERED (DutyCycleReq);
 
 DutyCycleReq::DutyCycleReq(void)
 {
-	
 	m_cid = DUTY_CYCLE;
 	m_direction = FROMBASE;
+}
+
+DutyCycleReq::DutyCycleReq(uint8_t dutyCycle)
+{
+	m_cid = DUTY_CYCLE;
+	m_direction = FROMBASE;
+	m_dutyCycle = dutyCycle;
 }
 
 DutyCycleReq::~DutyCycleReq (void)
@@ -56,7 +63,7 @@ DutyCycleReq::GetInstanceTypeId (void) const
 uint32_t
 DutyCycleReq::GetSerializedSize (void) const
 {
-  return 1;
+  return 2;
 }
 
 
@@ -65,21 +72,36 @@ DutyCycleReq::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
   i.WriteU8 (m_cid);
+	i.WriteU8(m_dutyCycle);
 }
 
 
 uint32_t
 DutyCycleReq::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	m_cid = static_cast<LoRaMacCommandCid>(start.ReadU8 ());
+	m_dutyCycle = start.ReadU8();
+  return 2;
 }
 
 void
 DutyCycleReq::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	nd->SetDutyCycle(m_dutyCycle);
+	Ptr<LoRaMacCommand> command = CreateObject<DutyCycleAns>();
+	nd->SetMacAnswer (command);
+}
+
+void
+DutyCycleReq::SetDutyCycle (uint8_t dutyCycle)
+{
+	m_dutyCycle = dutyCycle;
+}
+
+uint8_t 
+DutyCycleReq::GetDutyCycle ()
+{
+	return m_dutyCycle;
 }
 
 } //namespace ns3

@@ -194,14 +194,36 @@ public:
    * Set the maximal and minimal datarate manually.
 	 *
 	 * \param datarate the wanted datarate
+	 * \return if the setting was succesfull
    */
   bool SetMaxDataRate (uint8_t datarate);
   /**
    * Set the maximal and minimal datarate manually.
 	 *
 	 * \param datarate the wanted datarate
+	 * \param index the channel index for setting this datarate
+   */
+  bool SetMaxDataRate (uint8_t datarate, uint8_t index);
+  /**
+   * Set the maximal and minimal datarate manually.
+	 *
+	 * \param datarate the wanted datarate
    */
   bool SetMinDataRate (uint8_t datarate);
+  /**
+   * Set the maximal and minimal datarate manually.
+	 *
+	 * \param datarate the wanted datarate
+	 * \param index the channel index for setting this datarate
+   */
+  bool SetMinDataRate (uint8_t datarate, uint8_t index);
+  /**
+   * Set the maximal and minimal datarate manually.
+	 *
+	 * \param datarate the wanted datarate
+	 * \param index the channel index for setting this datarate
+   */
+  bool SetDelay (uint8_t delay);
  
 	/**
 		* SetReset resets the node after every message from the gateway to use the lowest spreading factor possible.
@@ -263,7 +285,7 @@ public:
 		*
 		* \param command the command to transmit in the next message
 		*/
-	void SetMacAnswer ( LoRaMacCommand* command);
+	void SetMacAnswer (Ptr<LoRaMacCommand> command);
   
   /**
    *  This method tries to resend an unacknowledged packet. If the number of retransmissions is too high, it takes a new packet.
@@ -271,6 +293,67 @@ public:
    */
 	void TryAgain();
 
+	/**
+		* Set the duty cycle
+		*/
+	void SetDutyCycle (uint8_t dutycycle);
+
+	/**
+		* Get the duty cycle
+		*/
+	uint8_t GetDutyCycle ();
+
+	/**
+		* SetRx2Settings sets the settings for the second receive slot
+		* 
+		* \param datarate the datarate of the second receive slot as specified in 7.1.3
+		* \param freq frequency of the second receive slot
+		*/
+	bool SetRx2Settings(uint8_t datarate, uint32_t freq);
+	
+	/**
+		* GetRx2Freq returns the frequency of the second receive slot
+		*
+		* \return the frequency
+		*/
+	uint32_t GetRx2Frequency ();
+	
+	/**
+		* GetRx2Datarate returns the datarate of the second receive slot
+		*
+		* \return the datarate as in 7.1.3
+		*/
+	uint8_t GetRx2Datarate ();
+	
+	/**
+		* SetDlOffset sets the offset for the first receive slot
+		*
+		* \param offset value that specifies the offset between 0 and 5
+		*/
+	bool SetDlOffset (uint8_t offset);
+	
+	/**
+		* GetDlOffset returns the offset for the first receive slot
+		*
+		* \return the offset to be used in receive slot one
+		*/
+	uint8_t GetDlOffset ();
+
+	
+	/**
+		* AddChannel adds a channel with the proposed parameters.
+		*
+		* \param index the index to set the new channel
+		* \param freq the frequency of the new channel
+		*/
+	bool AddChannel (uint8_t index, uint32_t freq);
+	/**
+		* AddChannel adds a channel with the proposed parameters.
+		*
+		* \param index the index to set the new channel
+		* \param freq the frequency of the new channel
+		*/
+	void RemoveChannel (uint8_t index);
 
 protected:
 
@@ -305,6 +388,9 @@ protected:
   uint32_t missedCount; //!< number of packets that did not get acknowledged
   uint32_t arrivedCount; //!< number of packets that arrived and got acknowledged
 	uint8_t m_powerIndex; //!< power index to transmit with
+	uint32_t m_rx2Freq; //!< Frequency of the second reception
+	uint8_t m_rx2Datarate; //!< Settings of the second reception
+	uint8_t m_rx1Offset; //!< Settings of the second reception
 	bool m_reset; //!< reset to highest data rate after each message from the base station
 	uint8_t m_ackCnt; //!< Amount of messages without an ACK
 	uint8_t ADR_ACK_LIMIT = 64; //!< The limit when we have to have received a message from the base station.
@@ -315,7 +401,7 @@ protected:
   uint16_t datarate [16] = {5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5}; //!< datarate to use on each channel
   double power [16] = {0,0.025,0.0126,0.0063,0.0031,0.0016,0,0,0,0,0,0,0,0,0,0}; //!< list of powers following the standard
   uint32_t bandwidth [16] = {125000,125000,125000,125000,125000,125000,250000,125000,125000,125000,125000,125000,125000,125000,125000,125000};//!<list of bandwidths
-	std::list<LoRaMacCommand*> m_answers; //!< List of answers to transmit to the other side
+	std::list<Ptr<LoRaMacCommand>> m_answers; //!< List of answers to transmit to the other side
 	
   /**
    * start the transmission of a packet by contacting the PHY layer
@@ -391,8 +477,14 @@ protected:
 		* \param powerIndex power to be used
 		*/
 	bool StartTransmission (Ptr<Packet> packet, uint32_t frequency, uint8_t datarate, uint8_t powerIndex);
-  
- 
+	
+	/**
+		* GetRxDatarate provide the datarate for the first reception slot
+		* 
+		* \param dr the transmission data rate
+		* \return the reception datarate
+		*/
+	uint8_t GetRxDatarate (uint8_t dr);
 };
 
 

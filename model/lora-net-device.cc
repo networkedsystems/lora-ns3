@@ -29,6 +29,7 @@
 #include "ns3/trace-source-accessor.h"
 #include "lora-mac-header.h"
 #include "lora-mac-command.h"
+#include <ns3/link-check-req.h>
 #include "lora-net-device.h"
 #include "ns3/llc-snap-header.h"
 #include "ns3/aloha-noack-mac-header.h"
@@ -136,7 +137,7 @@ namespace ns3 {
 		m_seqNum =0;
 		m_currentPkt = 0;
 		m_dutyCycle = 7;
-		m_waitingFactor = 0.0001;//(1.0-pow(2.0,-(double)m_dutyCycle))/pow(2.0,-(double)m_dutyCycle);
+		m_waitingFactor = 99;//(1.0-pow(2.0,-(double)m_dutyCycle))/pow(2.0,-(double)m_dutyCycle);
 		m_delay = 1;
 		retransmissionCount = 0;
 		m_powerIndex = 1;
@@ -147,6 +148,9 @@ namespace ns3 {
 		arrivedCount=0;
 		averageTime = 0;
 		m_node = 0;
+		m_rx2Datarate = 0; 
+		m_rx2Freq = 8695250;
+		m_rx1Offset = 0;
 	}
 
 	LoRaNetDevice::~LoRaNetDevice ()
@@ -419,6 +423,11 @@ uint32_t
 			LoRaMacHeader header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP,1);
 			header.SetAddr (m_address);
 			header.SetNoAck();
+			header.SetPort (protocolNumber);
+			if (m_seqNum%10 == 4)
+			{
+				header.SetMacCommand(CreateObject <LinkCheckReq> ());
+			}
 			packet->AddHeader (header);
 
 
@@ -509,7 +518,7 @@ uint32_t
 	bool
 		LoRaNetDevice::StartTransmission (Ptr<Packet> packet, uint32_t frequency, uint8_t datarate, uint8_t powerIndex)
 		{
-			NS_LOG_FUNCTION (this);
+			NS_LOG_FUNCTION (this << frequency << (uint32_t)datarate << (uint32_t)powerIndex);
 			// Set parameters of phy device
 			m_phy->SetChannelIndex(frequency);
 			m_phy->SetPower(power[powerIndex]);
@@ -531,6 +540,7 @@ uint32_t
 	void
 		LoRaNetDevice::FreeChannel (uint8_t channelIndex)
 		{
+			NS_LOG_FUNCTION ((uint32_t) channelIndex);
 			channelAvailable[channelIndex] = true;
 		}
 
@@ -549,14 +559,23 @@ uint32_t
 	bool
 		LoRaNetDevice::SetMaxDataRate (uint8_t maxSetting)
 		{
-			NS_LOG_DEBUG("Datarate " << (uint32_t)maxSetting);
+			NS_LOG_FUNCTION((uint32_t)maxSetting);
+			NS_ASSERT (maxSetting < 0x0F);
 			for (uint8_t i=0; i<16; i++)
 			{
-				//TODO check if this is allowed..
-				minDatarate[i] = maxSetting;
 				datarate[i] = maxSetting;
 				maxDatarate[i] = maxSetting;
 			}
+			return true;
+		}
+	
+	bool
+		LoRaNetDevice::SetMaxDataRate (uint8_t maxSetting, uint8_t index)
+		{
+			NS_LOG_FUNCTION((uint32_t)maxSetting << (uint32_t) index);
+			NS_ASSERT (maxSetting < 0x0F);
+			datarate[index] = maxSetting;
+			maxDatarate[index] = maxSetting;
 			return true;
 		}
 	
@@ -568,6 +587,29 @@ uint32_t
 				minDatarate[i] = minSetting;
 			}
 			return true;
+		}
+	bool 
+		LoRaNetDevice::SetDelay (uint8_t delay)
+		{
+			m_delay = delay;
+			return true;
+		}
+
+	bool
+		LoRaNetDevice::AddChannel (uint8_t index, uint32_t freq)
+		{
+			NS_LOG_FUNCTION (index << freq);
+			frequencies[index] = freq;
+			channelAvailable [index] = true;
+			return true;
+		}
+	
+	void 
+		LoRaNetDevice::RemoveChannel (uint8_t index)
+		{
+			NS_LOG_FUNCTION (index);
+			channelAvailable [index] = false;
+			m_freeChannel.Cancel();
 		}
 
 	void 
@@ -618,7 +660,7 @@ uint32_t
 			double timeNow = Simulator::Now().GetSeconds();
 			m_freeChannel = Simulator::Schedule(Seconds((timeNow-LastSend[m_channelIndex])*m_waitingFactor),&LoRaNetDevice::FreeChannel,this,m_channelIndex);
 			m_event = Simulator::Schedule(Seconds(m_delay-0.01),&LoRaNetDevice::PrepareReception, this, bandwidth[datarate[m_channelIndex]], frequencies[m_channelIndex],spreading[datarate[m_channelIndex]]);
-			m_event2 = Simulator::Schedule(Seconds(m_delay+0.99),&LoRaNetDevice::PrepareReception, this, bandwidth[datarate[m_channelIndex]], frequencies[m_channelIndex],spreading[datarate[m_channelIndex]]);
+			m_event2 = Simulator::Schedule(Seconds(m_delay+0.99),&LoRaNetDevice::PrepareReception, this, bandwidth[m_rx2Datarate], m_rx2Freq,spreading[m_rx2Datarate]);
 		}
 	
 	void
@@ -690,25 +732,21 @@ uint32_t
 					LoRaMacHeader macheader;
 					m_currentPkt->PeekHeader(macheader);
 					confirmed = macheader.NeedsAck();
-					NS_LOG_LOGIC("BRECHT HIERBAC");
 				}
 				if (retransmissionCount == 9 && confirmed)
 				{
 					m_currentPkt = 0;
 					m_state = IDLE;
 					missedCount++;
-					NS_LOG_LOGIC("BRECHT HIERBA");
 				}
 				else if (retransmissionCount >= m_nbRep && !confirmed)
 				{
 					m_currentPkt = 0;
 					m_state = IDLE;
-					NS_LOG_LOGIC("BRECHT HIERA");
 				}
 				// Get new message from the queue
 				if(m_currentPkt==0)
 				{
-					NS_LOG_LOGIC("BRECHT HIER");
 					if (m_queue->IsEmpty () == false)
 					{
 						startTimePacket = Simulator::Now();
@@ -868,8 +906,8 @@ uint32_t
 				m_macRxTrace(packet);
 				if (header.IsAcknowledgment ())
 					m_currentPkt = 0;
-				std::list<LoRaMacCommand*> commands = header.GetCommandList ();
-				for (std::list<LoRaMacCommand*>::iterator it = commands.begin(); it!=commands.end(); ++it)
+				std::list<Ptr<LoRaMacCommand>> commands = header.GetCommandList ();
+				for (std::list<Ptr<LoRaMacCommand>>::iterator it = commands.begin(); it!=commands.end(); ++it)
 				{
 					(*it)->Execute(this,m_address);
 				}
@@ -899,6 +937,7 @@ uint32_t
 	bool
 		LoRaNetDevice::SetChannelMask (uint16_t channelMask)
 		{
+			NS_LOG_DEBUG(channelMask);
 			m_freeChannel.Cancel();
 			uint8_t it = 0;
 			for(uint16_t i = 0; i<16; i++)
@@ -936,9 +975,55 @@ uint32_t
 		}
 
 	void
-		LoRaNetDevice::SetMacAnswer (LoRaMacCommand* command)
+		LoRaNetDevice::SetMacAnswer (Ptr<LoRaMacCommand> command)
 		{
 			m_answers.push_back(command);
 		}
+
+	void 
+		LoRaNetDevice::SetDutyCycle(uint8_t dutyCycle)
+		{
+			NS_LOG_FUNCTION (this << dutyCycle);
+			m_dutyCycle = dutyCycle;
+			m_waitingFactor = pow(2.0,(double)m_dutyCycle)-1;
+		}
+
+bool LoRaNetDevice::SetRx2Settings(uint8_t datarate, uint32_t freq)
+{
+	m_rx2Datarate = datarate;
+	m_rx2Freq = freq;
+	return true;
+}
+
+uint32_t LoRaNetDevice::GetRx2Frequency ()
+{
+	return m_rx2Freq;
+}
+
+uint8_t LoRaNetDevice::GetRx2Datarate ()
+{
+	return m_rx2Datarate;
+}
+
+bool LoRaNetDevice::SetDlOffset (uint8_t offset)
+{
+	m_rx1Offset = offset;
+	return true;
+}
+
+uint8_t
+	LoRaNetDevice::GetDlOffset ()
+{
+	return m_rx1Offset;
+}
+
+uint8_t 
+LoRaNetDevice::GetRxDatarate (uint8_t dr)
+{
+	if (dr > m_rx1Offset)
+		return dr - m_rx1Offset;
+	else
+		return 0;
+}
 
 } // namespace ns3

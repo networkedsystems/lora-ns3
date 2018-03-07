@@ -35,6 +35,7 @@ class RxTimingSetupReq : public LoRaMacCommand
 public:
 
   RxTimingSetupReq (void);
+  RxTimingSetupReq (uint8_t del);
 
   ~RxTimingSetupReq (void);
 
@@ -46,6 +47,12 @@ public:
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
   void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
+
+	void SetDelay (uint8_t del);
+	uint8_t GetDelay (void);
+
+private: 
+	uint8_t m_delay;
 
 }; //RxTimingSetupReq
 

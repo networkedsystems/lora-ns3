@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: George F. Riley<riley@ece.gatech.edu>
+ * Author: Brecht Reynders<brecht.reynders@esat.kuleuven.be>
  */
 
 // Implementation for ns3 Application base class.

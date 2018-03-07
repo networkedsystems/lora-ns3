@@ -18,7 +18,7 @@
  * Author: Brecht Reynders <brecht.reynders@esat.kuleuven.be>
  */
 #include "ns3/lora-phy.h"
-#include "ns3/lora-phy-gw.h"
+#include "ns3/lora-gw-phy.h"
 #include "ns3/net-device.h"
 #include "ns3/log.h"
 #include "ns3/queue.h"
@@ -31,43 +31,44 @@
 #include "ns3/trace-source-accessor.h"
 #include "lora-mac-header.h"
 #include "lora-mac-command.h"
-#include "lora-net-device-gw.h"
+#include "lora-gw-net-device.h"
 #include "lora-net-device.h"
 #include "gw-trailer.h"
+#include "lora-network-trailer.h"
 #include "commands/link-adr-req.h"
 namespace ns3 {
 
-	NS_LOG_COMPONENT_DEFINE ("LoRaNetDeviceGw");
-	NS_OBJECT_ENSURE_REGISTERED (LoRaNetDeviceGw);
+	NS_LOG_COMPONENT_DEFINE ("LoRaGwNetDevice");
+	NS_OBJECT_ENSURE_REGISTERED (LoRaGwNetDevice);
 
 	TypeId
-		LoRaNetDeviceGw::GetTypeId (void)
+		LoRaGwNetDevice::GetTypeId (void)
 		{
-			static TypeId tid = TypeId ("ns3::LoRaNetDeviceGw")
+			static TypeId tid = TypeId ("ns3::LoRaGwNetDevice")
 				.SetParent<LoRaNetDevice> ()
-				.AddConstructor<LoRaNetDeviceGw> ()
+				.AddConstructor<LoRaGwNetDevice> ()
 				.AddTraceSource ("MacTxGw",
 						"Trace source indicating a packet has arrived "
 						"for transmission by this device",
-						MakeTraceSourceAccessor (&LoRaNetDeviceGw::m_macTxTrace),
+						MakeTraceSourceAccessor (&LoRaGwNetDevice::m_macTxTrace),
 						"ns3::Packet::TracedCallback")
 				.AddTraceSource ("MacTxDropGw",
 						"Trace source indicating a packet has been dropped "
 						"by the device before transmission",
-						MakeTraceSourceAccessor (&LoRaNetDeviceGw::m_macTxDropTrace),
+						MakeTraceSourceAccessor (&LoRaGwNetDevice::m_macTxDropTrace),
 						"ns3::Packet::TracedCallback")
 				.AddTraceSource ("MacPromiscRxGw",
 						"A packet has been received by this device, has been "
 						"passed up from the physical layer "
 						"and is being forwarded up the local protocol stack.  "
 						"This is a promiscuous trace,",
-						MakeTraceSourceAccessor (&LoRaNetDeviceGw::m_macPromiscRxTrace),
+						MakeTraceSourceAccessor (&LoRaGwNetDevice::m_macPromiscRxTrace),
 						"ns3::Packet::TracedCallback")
 				;
 			return tid;
 		}
 
-	LoRaNetDeviceGw::LoRaNetDeviceGw ()
+	LoRaGwNetDevice::LoRaGwNetDevice ()
 		: LoRaNetDevice()
 	{
 		NS_LOG_FUNCTION (this);
@@ -75,33 +76,33 @@ namespace ns3 {
 	}
 
 	void
-	LoRaNetDeviceGw::DoInitialize ()
+	LoRaGwNetDevice::DoInitialize ()
 	{
 		LoRaNetDevice::DoInitialize ();
 		SetAddress (Mac32Address ("00:00:00:01"));
 	}
 
-	LoRaNetDeviceGw::~LoRaNetDeviceGw ()
+	LoRaGwNetDevice::~LoRaGwNetDevice ()
 	{
 		NS_LOG_FUNCTION (this);
 	}
 
 	void
-		LoRaNetDeviceGw::DoDispose ()
+		LoRaGwNetDevice::DoDispose ()
 		{
 			NS_LOG_FUNCTION (this);
 			NetDevice::DoDispose ();
 		}
 
-	Ptr<LoRaPhyGw>
-		LoRaNetDeviceGw::GetPhy () const
+	Ptr<LoRaGwPhy>
+		LoRaGwNetDevice::GetPhy () const
 		{
 			NS_LOG_FUNCTION (this);
-			return DynamicCast<LoRaPhyGw>(LoRaNetDevice::GetPhy ());
+			return DynamicCast<LoRaGwPhy>(LoRaNetDevice::GetPhy ());
 		}
 
 	bool
-		LoRaNetDeviceGw::SendFrom (Ptr<Packet> packet, const Address& src, const Address& dest, uint16_t protocolNumber)
+		LoRaGwNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& dest, uint16_t protocolNumber)
 		{
 			NS_LOG_FUNCTION (packet << src << dest << protocolNumber);
 		
@@ -142,13 +143,13 @@ namespace ns3 {
 		}
 
 	uint8_t
-		LoRaNetDeviceGw::GetDatarate(uint32_t bandwidth, uint8_t spreading)
+		LoRaGwNetDevice::GetDatarate(uint32_t bandwidth, uint8_t spreading)
 		{
 			return bandwidth/125000-1+12-spreading;
 		}
 
 	void
-		LoRaNetDeviceGw::CheckAckSend (const Address & addr, uint32_t frequency, uint8_t datarate, uint8_t powerIndex)
+		LoRaGwNetDevice::CheckAckSend (const Address & addr, uint32_t frequency, uint8_t datarate, uint8_t powerIndex)
 		{
 			Ptr<Packet> packet = 0;
 			// Check in the list if there is a packet for device with address addr
@@ -161,18 +162,20 @@ namespace ns3 {
 		}
 	
 	void
-		LoRaNetDeviceGw::DoCheckAckSend (Ptr<const Packet> packet, uint32_t frequency, uint8_t datarate, uint8_t powerIndex)
+		LoRaGwNetDevice::DoCheckAckSend (Ptr<Packet> packet, uint32_t frequency, uint8_t datarate, uint8_t powerIndex)
 		{
 			NS_LOG_FUNCTION (this);
 			if (packet != 0)
 			{
 				NS_LOG_DEBUG(GetPhy ()->GetReceptions() << " " << GetPhy ()->IsTransmitting());
-				if (this->GetPhy ()->GetReceptions()>0 || this->GetPhy ()->IsTransmitting())
+				LoRaNetworkTrailer trailer;
+				packet->RemoveTrailer(trailer);
+				if (this->GetPhy ()->GetReceptions()>0 || this->GetPhy ()->IsTransmitting()||true)
 				{
-					Simulator::Schedule(Seconds(1),&LoRaNetDeviceGw::StartTransmission,this,packet->Copy (),frequency,datarate,powerIndex);
+					Simulator::Schedule(Seconds(trailer.GetDelay()),&LoRaGwNetDevice::StartTransmission,this,packet->Copy (),trailer.GetRx2Freq(),trailer.GetRx2Dr(),powerIndex);
 				}
 				else{
-					Simulator::ScheduleNow(&LoRaNetDeviceGw::StartTransmission,this,packet->Copy (),frequency,datarate,powerIndex);
+					Simulator::Schedule(Seconds(trailer.GetDelay()-1),&LoRaGwNetDevice::StartTransmission,this,packet->Copy (),frequency,GetRxDatarate(datarate,trailer.GetRx1Offset()),powerIndex);
 				}
 			}
 		}
@@ -181,7 +184,7 @@ namespace ns3 {
 
 
 	void
-		LoRaNetDeviceGw::NotifyTransmissionEnd (Ptr<const Packet> packet)
+		LoRaGwNetDevice::NotifyTransmissionEnd (Ptr<const Packet> packet)
 		{
 			NS_LOG_FUNCTION (this << packet);
 			LoRaMacHeader header;
@@ -195,14 +198,14 @@ namespace ns3 {
 
 
 	void
-		LoRaNetDeviceGw::NotifyReceptionEndError ()
+		LoRaGwNetDevice::NotifyReceptionEndError ()
 		{
 			NS_LOG_FUNCTION (this);
 			// packet is discarded. Nothing happens
 		}
 
 	void
-		LoRaNetDeviceGw::NotifyReceptionEndOk (Ptr<Packet> packet, uint32_t bandwidth, uint8_t spreading, uint32_t frequency, double rssi)
+		LoRaGwNetDevice::NotifyReceptionEndOk (Ptr<Packet> packet, uint32_t bandwidth, uint8_t spreading, uint32_t frequency, double rssi)
 		{
 			NS_LOG_FUNCTION (this << packet << rssi);
 			LoRaMacHeader header;
@@ -246,14 +249,14 @@ namespace ns3 {
 				Ptr<Packet> copy = packet->Copy();
 				copy->AddTrailer(trail);
 				m_rxCallback (this, copy, header.GetPort (), header.GetAddr ());
-				EventId ack = Simulator::Schedule(Seconds(m_delay),&LoRaNetDeviceGw::CheckAckSend, this,header.GetAddr (), frequency, 12-spreading, 2);
+				EventId ack = Simulator::Schedule(Seconds(m_delay),&LoRaGwNetDevice::CheckAckSend, this,header.GetAddr (), frequency, 12-spreading, 2);
 			}
 			if (header.IsAcknowledgment ())
 				RemoveFromPending (header.GetAddr ());
 		}
 
 	void 
-		LoRaNetDeviceGw::RemoveFromPending (const Address& addr)
+		LoRaGwNetDevice::RemoveFromPending (const Address& addr)
 		{
 				for (std::list<std::tuple<Address,Ptr<Packet>>>::iterator it = m_pendingPackets.begin(); it!=m_pendingPackets.end();++it)
 				{
@@ -263,6 +266,14 @@ namespace ns3 {
 						break;
 					}
 				}
-		}
+		} 
 
+uint8_t 
+LoRaGwNetDevice::GetRxDatarate (uint8_t dr, uint8_t offset)
+{
+	if (dr > offset)
+		return dr - offset;
+	else
+		return 0;
+}
 } // namespace ns3

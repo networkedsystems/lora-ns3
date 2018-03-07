@@ -23,6 +23,16 @@
 #include "commands/link-check-req.h"
 #include "commands/link-adr-req.h"
 #include "commands/link-adr-ans.h"
+#include "commands/duty-cycle-req.h"
+#include "commands/duty-cycle-ans.h"
+#include "commands/rx-param-setup-req.h"
+#include "commands/rx-param-setup-ans.h"
+#include "commands/dev-status-req.h"
+#include "commands/dev-status-ans.h"
+#include "commands/new-channel-req.h"
+#include "commands/new-channel-ans.h"
+#include "commands/rx-timing-setup-req.h"
+#include "commands/rx-timing-setup-ans.h"
 #include "ns3/log.h"
 
 namespace ns3 {
@@ -92,7 +102,7 @@ TypeId
 LoRaMacCommand::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LoRaMacCommand")
-								.SetParent<ObjectBase>();
+								.SetParent<Object>();
   return tid;
 }
 
@@ -110,7 +120,7 @@ LoRaMacCommand::Print (std::ostream &os) const
   os << "Command = " << (uint32_t)m_cid; 
 }
 
-LoRaMacCommand*
+Ptr<LoRaMacCommand>
 LoRaMacCommand::CommandBasedOnCid (uint8_t cid, LoRaMacCommandDirection direction)
 {
 	NS_LOG_FUNCTION (cid << direction);
@@ -119,27 +129,26 @@ LoRaMacCommand::CommandBasedOnCid (uint8_t cid, LoRaMacCommandDirection directio
 		switch (static_cast<LoRaMacCommandCid> ( cid ))
 		{
 			case LINK_CHECK:
-				return new LinkCheckReq ();
+				return CreateObject<LinkCheckReq> ();
 				break;
 			case LINK_ADR:
-				return new LinkAdrAns ();
+				return CreateObject<LinkAdrAns> ();
 				break;
-// For now, only these are available.
-//		case DUTY_CYCLE:
-//			return Create<DutyCycleAns> ();
-//			break;
-//		case RX_PARAMS_SETUP:
-//			return Create<RxParamsSetupAns> ();
-//			break;
-//		case DEV_STATUS:
-//			return Create<DevStatusAns> ();
-//			break;
-//		case NEW_CHANNEL:
-//			return Create<NewChannelAns> ();
-//			break;
-//		case RX_TIMEING:
-//			return Create<RxTimingSetupAns> ();
-//			break;
+			case DUTY_CYCLE:
+				return CreateObject<DutyCycleAns> ();
+				break;
+			case RX_PARAM_SETUP:
+				return CreateObject<RxParamSetupAns> ();
+				break;
+			case DEV_STATUS:
+				return CreateObject<DevStatusAns> ();
+				break;
+			case NEW_CHANNEL:
+				return CreateObject<NewChannelAns> ();
+				break;
+			case RX_TIMING:
+				return CreateObject<RxTimingSetupAns> ();
+				break;
 			default:
 				NS_FATAL_ERROR("I don't know what to do with it..");
 		}
@@ -149,17 +158,32 @@ LoRaMacCommand::CommandBasedOnCid (uint8_t cid, LoRaMacCommandDirection directio
 		switch (static_cast<LoRaMacCommandCid> ( cid ))
 		{
 			case LINK_CHECK:
-				return new LinkCheckAns ();
+				return CreateObject<LinkCheckAns> ();
 				break;
 			case LINK_ADR:
-				return new LinkAdrReq ();
+				return CreateObject<LinkAdrReq> ();
+				break;
+			case DUTY_CYCLE:
+				return CreateObject<DutyCycleReq> ();
+				break;
+			case RX_PARAM_SETUP:
+				return CreateObject<RxParamSetupReq> ();
+				break;
+			case DEV_STATUS:
+				return CreateObject<DevStatusReq> ();
+				break;
+			case NEW_CHANNEL:
+				return CreateObject<NewChannelReq> ();
+				break;
+			case RX_TIMING:
+				return CreateObject<RxTimingSetupReq> ();
 				break;
 				//add here also the other ones
 			default:
 				NS_FATAL_ERROR("No such cid");
 		}
 	}
-	return new LinkAdrAns ();
+	return CreateObject<LinkAdrReq> ();
 }
 
 } //namespace ns3

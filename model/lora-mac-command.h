@@ -30,7 +30,7 @@
 #define LORA_MAC_COMMAND_H
 
 #include "ns3/buffer.h"
-#include "ns3/object-base.h"
+#include "ns3/object.h"
 #include <ns3/header.h>
 #include <stdint.h>
 #include "lora-net-device.h"
@@ -61,7 +61,7 @@ namespace ns3 {
 
 
 
-	class LoRaMacCommand : public ObjectBase
+	class LoRaMacCommand : public Object
 	{
 
 		public:
@@ -123,7 +123,7 @@ namespace ns3 {
 				* CommandBasedOnCid returns a pointer to a LoRaMacCommand with a specified cid and direction.
 				* This could be seen as a constructor for different derived classes.
 				*/
-			static LoRaMacCommand* CommandBasedOnCid (uint8_t cid, LoRaMacCommandDirection direction);
+			static Ptr<LoRaMacCommand> CommandBasedOnCid (uint8_t cid, LoRaMacCommandDirection direction);
 
 		protected:
 			LoRaMacCommandCid m_cid; //!< The LoRa MAC command

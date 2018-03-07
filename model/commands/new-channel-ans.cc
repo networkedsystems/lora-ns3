@@ -26,11 +26,20 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (NewChannelAns);
 
-NewChannelAns::NewChannelAns(void)
+NewChannelAns::NewChannelAns(bool datarateOk, bool freqOk)
 {
-	
 	m_cid = NEW_CHANNEL;
 	m_direction = TOBASE;
+	m_freqOk = freqOk;
+	m_datarateOk = datarateOk;
+}
+
+NewChannelAns::NewChannelAns(void)
+{
+	m_cid = NEW_CHANNEL;
+	m_direction = TOBASE;
+	m_freqOk = true;
+	m_datarateOk = true;
 }
 
 NewChannelAns::~NewChannelAns (void)
@@ -56,7 +65,7 @@ NewChannelAns::GetInstanceTypeId (void) const
 uint32_t
 NewChannelAns::GetSerializedSize (void) const
 {
-  return 1;
+  return 2;
 }
 
 
@@ -65,21 +74,55 @@ NewChannelAns::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
   i.WriteU8 (m_cid);
+	uint8_t temp = 0;
+	if (m_freqOk)
+		temp = 1;
+	else
+		temp = 0;
+	if (m_datarateOk)
+		temp ^= 2;
+	else
+		temp ^= 0;
+	i.WriteU8(temp);
 }
 
 
 uint32_t
 NewChannelAns::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	m_cid = static_cast<LoRaMacCommandCid>(start.ReadU8 ());
+	uint8_t temp = start.ReadU8();
+	m_freqOk = ((temp&0x01) == 1);
+	m_datarateOk = ((temp&0x02) == 2);
+  return 2;
 }
 
 void
-NewChannelAns::Execute (Ptr<LoRaNetDevice> nd,Address address)
+NewChannelAns::Execute (Ptr<LoRaNetworkApplication> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	std::cout << m_freqOk << " " << m_datarateOk << std::endl;
+}
+	
+void 
+NewChannelAns::SetDatarateOk (bool drOk)
+{
+	m_datarateOk = drOk;
+}
+bool 
+NewChannelAns::GetDatarateOk ()
+{
+	return m_datarateOk;
+}
+void 
+NewChannelAns::SetFreqOk (bool freqOk)
+{
+	m_freqOk = freqOk;
+}
+
+bool
+NewChannelAns::GetFreqOk (void)
+{
+	return m_freqOk;
 }
 
 } //namespace ns3

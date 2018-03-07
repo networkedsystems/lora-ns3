@@ -36,6 +36,7 @@ class NewChannelReq : public LoRaMacCommand
 public:
 
   NewChannelReq (void);
+  NewChannelReq (uint8_t chIndex, uint32_t freq, uint8_t minDr, uint8_t maxDr);
   ~NewChannelReq (void);
 
   std::string GetName (void) const;
@@ -47,6 +48,12 @@ public:
   uint32_t Deserialize (Buffer::Iterator start);
   void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
 
+private:
+	uint8_t m_chIndex;
+	uint32_t m_freq;
+	uint8_t m_minDr;
+	uint8_t m_maxDr;
+	
 }; //NewChannelReq
 
 }; // namespace ns-3

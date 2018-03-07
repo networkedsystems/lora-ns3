@@ -28,9 +28,16 @@ NS_OBJECT_ENSURE_REGISTERED (DevStatusAns);
 
 DevStatusAns::DevStatusAns(void)
 {
-	
 	m_cid = DEV_STATUS;
 	m_direction = TOBASE;
+}
+
+DevStatusAns::DevStatusAns(uint8_t battery, int8_t margin)
+{
+	m_cid = DEV_STATUS;
+	m_direction = TOBASE;
+	m_battery = battery;
+	m_margin = margin;
 }
 
 DevStatusAns::~DevStatusAns (void)
@@ -56,7 +63,7 @@ DevStatusAns::GetInstanceTypeId (void) const
 uint32_t
 DevStatusAns::GetSerializedSize (void) const
 {
-  return 1;
+  return 3;
 }
 
 
@@ -65,22 +72,63 @@ DevStatusAns::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
   i.WriteU8 (m_cid);
+	i.WriteU8 (m_battery);
+	union X  
+	{  
+	    int8_t intValue;  
+	    uint8_t uintValue;  
+	} marginConversion; 
+	marginConversion.intValue = m_margin;
+	i.WriteU8 (marginConversion.uintValue);
 }
 
 
 uint32_t
 DevStatusAns::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	union X  
+	{  
+	    int8_t intValue;  
+	    uint8_t uintValue;  
+	} marginConversion;  
+	start.ReadU8();
+	m_battery = start.ReadU8();
+	marginConversion.uintValue = start.ReadU8();
+	m_margin = marginConversion.intValue;
+  return 3;
 }
 
 void
-DevStatusAns::Execute (Ptr<LoRaNetDevice> nd,Address address)
+DevStatusAns::Execute (Ptr<LoRaNetworkApplication> app,Address address)
 {
+	std::cout << (int32_t)m_margin << " " << (uint32_t)m_battery << std::endl;
 	//nd->GetSNR();
 	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
 	//nd->SetMacAnswer (command);
 }
 
+void
+DevStatusAns::SetBattery (uint8_t battery)
+{
+	m_battery = battery;
+}
+
+uint8_t 
+DevStatusAns::GetBattery ()
+{
+	return m_battery;
+}
+
+void
+DevStatusAns::SetMargin (int8_t margin)
+{
+	m_margin = margin;
+}
+
+int8_t 
+DevStatusAns::GetMargin ()
+{
+	return m_margin;
+}
 } //namespace ns3
 

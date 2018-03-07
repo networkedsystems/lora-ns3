@@ -18,8 +18,8 @@
  * Author: Brecht Reyndres <brecht.reynders@esat.kuleuven.be>
  */
 
-#ifndef LORA_NET_DEVICE_GW_H
-#define LORA_NET_DEVICE_GW_H
+#ifndef LORA_GW_NET_DEVICE_H
+#define LORA_GW_NET_DEVICE_H
 
 #include <cstring>
 #include <ns3/node.h>
@@ -37,7 +37,7 @@
 
 namespace ns3 {
 
-class LoRaPhyGw;
+class LoRaGwPhy;
 class SpectrumChannel;
 class Channel;
 class SpectrumErrorModel;
@@ -53,7 +53,7 @@ class Queue;
  *	-handle multiple simultaneous receptions
  * Most of the code is programmed in LoRaNetDevice, as lots of functionality is the same
  */
-class LoRaNetDeviceGw : public LoRaNetDevice
+class LoRaGwNetDevice : public LoRaNetDevice
 {
 public:
 
@@ -70,8 +70,8 @@ public:
 
   static TypeId GetTypeId (void);
 
-  LoRaNetDeviceGw ();
-  virtual ~LoRaNetDeviceGw ();
+  LoRaGwNetDevice ();
+  virtual ~LoRaGwNetDevice ();
 
   /**
    * Notify the MAC that the PHY has finished a previously started transmission
@@ -96,7 +96,7 @@ public:
 	* Get the PHY layer of this net-device
    * \return a reference to the PHY object embedded in this NetDevice.
    */
-  Ptr<LoRaPhyGw> GetPhy () const;
+  Ptr<LoRaGwPhy> GetPhy () const;
 
   // inherited from NetDevice
   virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest,
@@ -123,7 +123,7 @@ protected:
 		* \params datarate datarate of the packet
 		* \params powerIndex power to be used
 		*/
-  virtual void DoCheckAckSend (Ptr<const Packet> packet, uint32_t frequency, uint8_t datarate, uint8_t powerIndex);
+  virtual void DoCheckAckSend (Ptr<Packet> packet, uint32_t frequency, uint8_t datarate, uint8_t powerIndex);
   //inherited
 	virtual void DoDispose (void);
 
@@ -143,6 +143,15 @@ protected:
    */
 	static uint8_t GetDatarate (uint32_t bandwidth, uint8_t spreading);
 
+	/**
+		* GetRxDatarate provide the datarate for the first reception slot
+		* 
+		* \param dr the transmission data rate
+		* \param offset the offset to be used
+		* \return the reception datarate
+		*/
+	uint8_t GetRxDatarate (uint8_t dr, uint8_t offset);
+
 	std::list< std::tuple<Address, Ptr<Packet> > > m_pendingPackets; //!< The list of pending packets
 	uint8_t m_delay; //!< the delay to retransmit a message
 };
@@ -150,4 +159,4 @@ protected:
 
 } // namespace ns3
 
-#endif /* LORA_NET_DEVICE_GW_H */
+#endif /* LORA_GW_NET_DEVICE_H */

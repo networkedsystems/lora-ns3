@@ -77,12 +77,8 @@ LoRaPhy::LoRaPhy ()
   m_bitErrors = 0;
 	m_transmission = false;
   m_errorModel =Create<LoRaErrorModel> (); 
-  InitTxPowerSpectralDensity (m_channelIndex,m_power);
-  m_receivingPower = Create<SpectrumValue> (m_txPsd->GetSpectrumModel ());
-  for (uint32_t i = 0; i<25; i++)
-  {
-    (*m_receivingPower)[i]=0;
-  }
+  InitPowerSpectralDensity ();
+  m_receivingPower = Create<SpectrumValue> (m_rxPsd->GetSpectrumModel ());
   for (uint8_t i = 0; i<8; i++)
   {
     for (uint8_t j=0; j<30; j++)
@@ -99,7 +95,7 @@ LoRaPhy::~LoRaPhy ()
   m_mobility = 0;
   m_channel = 0;
   m_antenna = 0;
-  m_txPsd = 0;
+  m_rxPsd = 0;
 	m_errorModel = 0;
 }
 
@@ -153,12 +149,12 @@ LoRaPhy::SetChannel (Ptr<SpectrumChannel> c)
 }
 
 void
-LoRaPhy::InitTxPowerSpectralDensity (uint32_t channeloffset, double power)
+LoRaPhy::InitPowerSpectralDensity ()
 {
   NS_LOG_FUNCTION (this);
   // create offset
   Bands bands;
-  for (int i= 0; i < 25;i++){
+  for (int i= 0; i < 70;i++){
 	BandInfo bi;
 	bi.fl = 868e6+i*25000;
  	bi.fh = 868e6+(i+1)*25000;
@@ -166,7 +162,33 @@ LoRaPhy::InitTxPowerSpectralDensity (uint32_t channeloffset, double power)
 	bands.push_back (bi);
   }
   Ptr<SpectrumModel> sm = Create<SpectrumModel> (bands);
-  m_txPsd = Create <SpectrumValue> (sm);
+  m_rxPsd = Create <SpectrumValue> (sm);
+}
+
+void
+LoRaPhy::SetRxSpectrumModel (Ptr<const SpectrumModel> model)
+{
+	m_rxPsd = 0;
+	m_rxPsd = Create <SpectrumValue> (model);
+  m_receivingPower = Create<SpectrumValue> (m_rxPsd->GetSpectrumModel ());
+}
+
+Ptr<SpectrumValue>
+LoRaPhy::GetFullTxPowerSpectralDensity (uint32_t channeloffset, double power)
+{
+  NS_LOG_FUNCTION(this);
+  // 3 banden, waarvan een heel groot deel niet gebruikt worden. 
+  double txPowerDensity = power/m_bandwidth;
+  //reset m_rxPsd
+  for (uint32_t i = 0; i<70; i++)
+  {
+    (*m_rxPsd)[i]=0;
+  }
+  //and fill it
+  for (uint8_t j = (channeloffset-868e4)/250-m_bandwidth/2/25000; j<(channeloffset-868e4)/250+m_bandwidth/2/25000+1; j++){
+  	(*m_rxPsd)[j] = txPowerDensity;
+  }
+  return m_rxPsd->Copy ();
 }
 
 Ptr<SpectrumValue>
@@ -175,23 +197,28 @@ LoRaPhy::GetTxPowerSpectralDensity (uint32_t channeloffset, double power)
   NS_LOG_FUNCTION(this);
   // 3 banden, waarvan een heel groot deel niet gebruikt worden. 
   double txPowerDensity = power/m_bandwidth;
-  //reset m_txPsd
-  for (uint32_t i = 0; i<25; i++)
-  {
-    (*m_txPsd)[i]=0;
-  }
   //and fill it
-  for (uint8_t j = (channeloffset-868e4)/250-m_bandwidth/2/25000; j<(channeloffset-868e4)/250+m_bandwidth/2/25000+1; j++){
-  	(*m_txPsd)[j] = txPowerDensity;
+  Bands bands;
+  for (int i= 0; i < m_bandwidth/25e3;i++){
+		BandInfo bi;
+		bi.fl = channeloffset*100+i*25000-m_bandwidth/2;
+ 		bi.fh = channeloffset*100+(i+1)*25000-m_bandwidth/2;
+		bi.fc = (bi.fl+bi.fh)/2;
+		bands.push_back (bi);
   }
-  return m_txPsd->Copy ();
+  Ptr<SpectrumModel> sm = Create<SpectrumModel> (bands);
+	Ptr<SpectrumValue> test = Create<SpectrumValue> (sm);
+  for (int i= 0; i < m_bandwidth/25e3;i++){
+		(*test)[i]=txPowerDensity;
+	}
+  return test->Copy ();
 }
 
 Ptr<const SpectrumModel>
 LoRaPhy::GetRxSpectrumModel () const
 {
   NS_LOG_FUNCTION (this);
-  return m_txPsd->GetSpectrumModel ();
+  return m_rxPsd->GetSpectrumModel ();
 }
 
 void
@@ -248,6 +275,13 @@ LoRaPhy::GetRssiLastPacket (void)
 {
 	NS_LOG_FUNCTION (this);
 	return m_lastRssi;
+}
+	
+	double 
+LoRaPhy::GetSnrLastPacket (void)
+{
+	NS_LOG_FUNCTION (this);
+	return m_lastSnr;
 }
 void 
 LoRaPhy::SetSpreadingFactor (uint8_t sf){
@@ -505,7 +539,12 @@ LoRaPhy::UpdateBer ()
 		}
 
 		double snr = signalPower/noisePower;
-		NS_LOG_DEBUG("The SNR: " << snr);
+		// guard this, because this function is called twice at the end of a packet
+		if (timeNow - m_lastCheck > 0.001)
+		{		
+			m_lastSnr = 10*std::log10(snr);
+		}
+		NS_LOG_DEBUG("The SNR: " << snr << " " << signalPower << " " << noisePower);
 		//getBER
 		long double berEs = m_errorModel->GetBER (snr, m_params->GetSpreading(), m_bandwidth);
 		//calculate numbers of biterrors

@@ -35,6 +35,7 @@ namespace ns3 {
 
 	class Node;
 	class Packet;
+	class LoRaMacCommand;
 
 	/**
 	 * \ingroup lora
@@ -62,6 +63,7 @@ namespace ns3 {
 			 * \param packet new packet from the network.
 			 */
 			virtual void NewPacket (Ptr<const Packet> packet)=0;
+			virtual void SetMacAnswer (Ptr<LoRaMacCommand> command) {};
 
 			/**
 			 * Setter for the network

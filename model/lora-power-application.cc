@@ -343,10 +343,10 @@ namespace ns3 {
 			GwTrailer trail;
 			pkt->Copy ()->PeekTrailer (trail);
 			NewRssi (trail.GetRssi (), header.GetAddr ());
-			std::list<LoRaMacCommand*> commands = header.GetCommandList ();
-			for (std::list<LoRaMacCommand*>::iterator it = commands.begin(); it!=commands.end();++it)
+			std::list<Ptr<LoRaMacCommand>> commands = header.GetCommandList ();
+			for (std::list<Ptr<LoRaMacCommand>>::iterator it = commands.begin(); it!=commands.end();++it)
 			{
-				LinkAdrAns* ans = dynamic_cast<LinkAdrAns*>(*it);
+				Ptr<LinkAdrAns> ans = DynamicCast<LinkAdrAns>(*it);
 				if (ans != 0)
 					ans->Execute(this,header.GetAddr());
 			}
@@ -358,7 +358,7 @@ namespace ns3 {
 					ans.SetAddr (header.GetAddr ());
 					ans.SetType (LoRaMacHeader::LORA_MAC_UNCONFIRMED_DATA_DOWN);
 					std::tuple<uint16_t, uint8_t,uint8_t> setting = GetSetting (header.GetAddr());
-					LinkAdrReq* req = new LinkAdrReq (std::get<0>(setting),std::get<1>(setting),std::get<2>(setting),1);
+					Ptr<LinkAdrReq> req = CreateObject<LinkAdrReq> (std::get<0>(setting),std::get<1>(setting),std::get<2>(setting),1);
 					ans.SetMacCommand(req);
 					Ptr<Packet> ack = Create<Packet>(0);
 					ack->AddHeader(ans);

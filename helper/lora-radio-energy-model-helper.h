@@ -15,8 +15,7 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 *
-* Author: Sidharth Nabar <snabar@uw.edu>, He Wu <mdzz@u.washington.edu>
-*         Peishuo Li <pressthunder@gmail.com>
+* Author: 
 *					Brecht Reynders
 */
 
@@ -32,7 +31,7 @@ namespace ns3 {
  * \ingroup energy
  * \brief Assign LoRaRadioEnergyModel to LoRa devices.
  *
- * This installer installs LoRaRadioEnergyModel for only LoRaTschNetDevice objects.
+ * This installer installs LoRaRadioEnergyModel for only LoRaNetDevice objects.
  *
  */
 class LoRaRadioEnergyModelHelper : public DeviceEnergyModelHelper

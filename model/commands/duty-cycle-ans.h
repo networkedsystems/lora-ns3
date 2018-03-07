@@ -45,7 +45,7 @@ public:
   uint32_t GetSerializedSize (void) const;
   void Serialize (Buffer::Iterator start) const;
   uint32_t Deserialize (Buffer::Iterator start);
-  void Execute(Ptr<LoRaNetDevice> netDevice,Address address);
+  virtual void Execute(Ptr<LoRaNetworkApplication> app, Address address);
 
 }; //DutyCycleAns
 

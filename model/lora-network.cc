@@ -24,6 +24,7 @@
 #include "ns3/net-device.h"
 #include "lora-network.h"
 #include "lora-mac-header.h"
+#include "gw-trailer.h"
 #include "ns3/simulator.h"
 #include "ns3/packet.h"
 #include "ns3/channel.h"
@@ -36,7 +37,7 @@
 #include "ns3/socket.h"
 #include "ns3/udp-socket.h"
 #include "ns3/socket-factory.h"
-
+#include "lora-network-trailer.h"
 
 #include <iostream>
 #include <list>
@@ -88,7 +89,7 @@ namespace ns3 {
 		LoRaNetwork::DoDispose ()
 		{
 			NS_LOG_FUNCTION (this);
-			justSend.clear();
+			m_stats.clear();
 			//::DoDispose();
 		}
 
@@ -133,53 +134,57 @@ namespace ns3 {
 			packet->PeekHeader(header);
 			Address address = header.GetAddr();
 			NS_LOG_FUNCTION (this << address );
-			uint16_t seqnum = header.GetFrmCounter(); 
+			uint16_t seqnum = header.GetFrmCounter();
+			GwTrailer trailer;
+			packet->Copy()->PeekTrailer (trailer);
 			Simulator::ScheduleNow(&LoRaNetwork::m_netPromiscRxTrace,this,packet->Copy());
 			if (IsWhiteListed(address))
 			{
-				for (auto &it : justSend)
+				if (m_stats.find(address) != m_stats.end())
 				{
-					if (address == it)
-					{
-						NS_LOG_LOGIC("There has been a message that is just transmitted");
-						// Send message to gateway that there is no need to transmit anything
-						// we use the ACK field for downlink message to tell if a gateway needs to send something
+					NS_LOG_LOGIC("There has been a message that is just transmitted");
+					// Send message to gateway that there is no need to transmit anything
+					// we use the ACK field for downlink message to tell if a gateway needs to send something
 
-						LoRaMacHeader ackHeader;
-						Ptr<Packet> ack = Create<Packet> (0);
-						ackHeader.SetAddr(header.GetAddr ());
-						ackHeader.SetNoAck ();
-						return false;
-					}
-				}
-				for (auto &it : m_latest)
-				{
-					NS_LOG_LOGIC (std::get <0> (it) << " " << address << " " << std::get <1> (it) << " "<< seqnum);
-					if (address == std::get<0>(it))
+					//LoRaMacHeader ackHeader;
+					//Ptr<Packet> ack = Create<Packet> (0);
+					//ackHeader.SetAddr(header.GetAddr ());
+					//ackHeader.SetNoAck ();
+					m_stats[address].gwCount++;
+					if (m_stats[address].maxRssi < trailer.GetRssi ())
 					{
-							if(std::get<1>(it)!=seqnum)
-							{
-							std::get<1>(it) = seqnum;
-							Simulator::ScheduleNow(&LoRaNetwork::m_netRxTrace,this,packet);
-							m_packetToTransmit[header.GetAddr()] = 0;
-							}
-						if ((header.IsAdrAck () && header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP) || header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP)
-						{
-							LoRaMacHeader ackHeader;
-							ackHeader = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_DOWN,header.GetFrmCounter());
-							Ptr<Packet> ack = Create<Packet> (0);
-							ackHeader.SetAddr(header.GetAddr ());
-							ackHeader.SetAck ();
-							ack->AddHeader (ackHeader);
-							Address address = header.GetAddr();
-							m_packetToTransmit[address] = ack;
-							NS_LOG_LOGIC ("Sending ACK");
-							Simulator::Schedule(Seconds(0.5),&LoRaNetwork::SendAck,this,from,address);
-						}
+						m_stats[address].maxRssi = trailer.GetRssi ();
+						m_stats[address].strongestGateway = from;
 					}
+					return false;
 				}
-				justSend.push_back(address);
-				Simulator::Schedule(Seconds(.5),&LoRaNetwork::RemoveMessage,this,address);
+				PacketStats stats;
+				stats.maxRssi = trailer.GetRssi();
+				stats.gwCount = 1;
+				stats.strongestGateway = from;
+				m_stats[address] = stats;
+				if(m_latest[address]!=seqnum)
+				{
+					m_latest[address] = seqnum;
+					Simulator::ScheduleNow(&LoRaNetwork::m_netRxTrace,this,packet);
+					m_packetToTransmit[header.GetAddr()] = 0;
+				}
+				if ((header.IsAdrAck () && header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP) || header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP)
+				{
+					LoRaMacHeader ackHeader;
+					ackHeader = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_DOWN,header.GetFrmCounter());
+					Ptr<Packet> ack = Create<Packet> (0);
+					ackHeader.SetAddr(header.GetAddr ());
+					ackHeader.SetAck ();
+					ack->AddHeader (ackHeader);
+					DeviceRxSettings theseSettings = m_settings[header.GetAddr()];
+					LoRaNetworkTrailer trailer = LoRaNetworkTrailer(theseSettings.delay,theseSettings.dr1Offset,theseSettings.dr2,theseSettings.frequency);
+					ack->AddTrailer (trailer);
+					Address address = header.GetAddr();
+					m_packetToTransmit[address] = ack;
+				}
+				NS_LOG_LOGIC ("Scheduling ACK or data");
+				Simulator::Schedule(Seconds(0.5),&LoRaNetwork::SendAck,this,address);
 				return true;
 			}
 			return false;
@@ -200,40 +205,35 @@ namespace ns3 {
 		}
 
 	void
-		LoRaNetwork::RemoveMessage (const Address& address)
-		{
-			for (std::vector<Address>::iterator it = justSend.begin(); it!= justSend.end(); it++)
-			{
-				if (address == *it)
-				{
-					justSend.erase(it);
-					break;
-				}
-			} 
-			//Do we need to do something here?
-		}
-
-	void
 		LoRaNetwork::WhiteListDevice (const Address& address)
 		{
 			m_whiteList.push_back(address);
 			//m_whitelistCallback(address);
-			m_latest.push_back(std::make_tuple(address,255));
+			m_latest[address] = 255;
+			DeviceRxSettings settings;
+			settings.delay = 1;
+			settings.dr1Offset = 0;
+			settings.dr2 = 0;
+			settings.frequency = 8695250;
+			m_settings[address]=settings;
 		}
 
 	void 
-		LoRaNetwork::SendAck (const Address& gateway, const Address& sensor)
+		LoRaNetwork::SendAck (const Address& sensor)
 		{
-			NS_LOG_FUNCTION (this << gateway << sensor);
+			NS_LOG_FUNCTION (this << sensor);
 			if (m_packetToTransmit[sensor] != 0)
 			{
-				m_socket->SendTo (m_packetToTransmit[sensor],0,gateway);
+				LoRaMacHeader header; 
+				m_packetToTransmit[sensor]->PeekHeader(header);
+				m_socket->SendTo (m_packetToTransmit[sensor],0,m_stats[header.GetAddr()].strongestGateway);
 				m_packetToTransmit[sensor] = 0;
 			}
 			else 
 			{
 				NS_LOG_DEBUG("This is empty");
 			}
+			m_stats.erase(sensor);
 		}
 
 	void
@@ -278,7 +278,9 @@ namespace ns3 {
 					// keep the packet with data
 					if (packet->GetSize () - mac.GetSerializedSize () > 0)
 					{
+						copy->RemoveHeader(mac);
 						mac.Merge(mac2);
+						copy->AddHeader(mac);
 						m_packetToTransmit[mac.GetAddr()] = 0;
 						m_packetToTransmit[mac.GetAddr()] = copy;
 					}
@@ -289,11 +291,35 @@ namespace ns3 {
 						m_packetToTransmit[mac.GetAddr()]->AddHeader (mac2);
 					}
 					return true;
-						
+
 				}
 			}
 			return false;
 		}
 
+	void LoRaNetwork::SetDelayOfDevice (const Address& address, uint8_t delay)
+	{
+		m_settings[address].delay = delay;
+	}
+	void LoRaNetwork::SetSettingsOfDevice (const Address& address, uint8_t offset, uint8_t dr, uint32_t freq)
+	{
+		m_settings[address].dr1Offset = offset;
+		m_settings[address].dr2 = dr;
+		m_settings[address].frequency = freq;
+	}
+
+	uint8_t LoRaNetwork::GetCount (const Address& address)
+	{
+		return m_stats[address].gwCount;
+	}
+
+	uint8_t LoRaNetwork::GetMargin (const Address& address)
+	{
+		double temp =  10*std::log10(m_stats[address].maxRssi)+160;
+		if (temp > 254) 
+			return 254;
+		else
+			return (uint8_t) temp;
+	}
 
 } // namespace ns3

@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: kwong yin <kwong-sang.yin@boeing.com>
+ *				Brecht Reynders
  */
 
 #include "lora-mac-header.h"
@@ -37,9 +38,9 @@ LoRaMacHeader::LoRaMacHeader ()
   SetType (LORA_MAC_CONFIRMED_DATA_UP);     // Assume Data frame
   SetNoFrmPend ();               // No Frame Pending
   SetNoAck ();                // No Ack Frame will be expected from recepient
-  SetFrmCtrlRes (0);             // Initialize the 3 reserved bits to 0
-  SetFrameVer (0);               //Indicates an IEEE 802.15.4 frame
-  SetPort (1);
+  SetFrmCtrlRes (0);       
+  SetFrameVer (0);          
+  SetPort (0);
 	SetNoAdrAck();
 }
 
@@ -51,9 +52,9 @@ LoRaMacHeader::LoRaMacHeader (enum LoRaMacType loraMacType,
   SetType (loraMacType);
   SetNoFrmPend ();               // No Frame Pending
   SetNoAck ();                // No Ack Frame will be expected from recepient
-  SetFrmCtrlRes (0);             // Initialize the 3 reserved bits to 0
-  SetFrameVer (0);               //Indicates an IEEE 802.15.4 frame
-  SetPort (1);
+  SetFrmCtrlRes (0);        
+  SetFrameVer (0);           
+  SetPort (0);
   SetFrmCounter(seqNum);
 	SetNoAdrAck();
 }
@@ -422,26 +423,10 @@ uint32_t
 LoRaMacHeader::GetSerializedSize (void) const
 {
 	NS_LOG_FUNCTION (this);
-  /*
-   * Each mac header will have
-   * Frame Control      : 2 octet
-   * Sequence Number    : 0/1 Octet
-   * Dst PAN Id         : 0/2 Octet
-   * Dst Address        : 0/2/8 octet
-   * Src PAN Id         : 0/2 octet
-   * Src Address        : 0/2/8 octet
-   * IE Header          : variable
-   */
 
- // uint32_t size = 8 + GetCommandsLength ();
-	uint32_t size = 24;
-  //if (GetCommandsLength()>0) {
-    //for (std::list<LoRaMacCommand*>::const_iterator it = commands.begin() ; it != commands.end() ; it++) {
-    //  size+=it->GetSerializedSize ();
-    //}
-  //}
-
-  return (size);
+	if (IsBeacon ())
+		return m_channels.size()*2 + 10 + GetCommandsLength ();
+  return 9 + GetCommandsLength ();
 }
 
 
@@ -456,9 +441,6 @@ LoRaMacHeader::Serialize (Buffer::Iterator start) const
   i.WriteU8 (frameControl);
   i.WriteU16(m_auxFrmCntr);
 
-
-	Buffer::Iterator temp = i;
-
 	//Maybe add these at the back? then old devices can also read it. Now they will see weird mac commands.. :) 
 	if(IsBeacon())
 	{
@@ -467,21 +449,14 @@ LoRaMacHeader::Serialize (Buffer::Iterator start) const
     	i.WriteU8(std::get<0>(*it));
     	i.WriteU8(std::get<1>(*it));
   	}
-		for(uint8_t k = 0; k< GetSerializedSize()-15;k++)
-		{
-			i.WriteU8(0);
-		}
 	}
-	else
-	{
-		for(uint8_t k = 0; k< GetSerializedSize()-8;k++)
-		{
-			i.WriteU8(0);
-		}
-	}
-  for (std::list<LoRaMacCommand*>::const_iterator it = m_commands.begin() ; it != m_commands.end() ; it++) {
-    (*it) -> Serialize (temp);
+  for (std::list<Ptr<LoRaMacCommand>>::const_iterator it = m_commands.begin() ; it != m_commands.end() ; it++) {
+    (*it) -> Serialize (i);
+		i.Next((*it)->GetSerializedSize());
   }
+	// This value should not be written when there are MAC commands.
+	// To many iftests to implement this.
+	i.WriteU8 (m_port);
 }
 
 
@@ -497,7 +472,7 @@ LoRaMacHeader::Deserialize (Buffer::Iterator start)
   uint8_t frameControl = i.ReadU8 ();
   SetFrameControl (frameControl);
   SetFrmCounter (i.ReadU16());
-	
+
 	if(IsBeacon())
 	{
 		uint8_t channelNb = i.ReadU8();
@@ -515,12 +490,14 @@ LoRaMacHeader::Deserialize (Buffer::Iterator start)
 	while(counter< m_fctrlCommandsLength)
 	{
 		uint8_t cid = i.PeekU8 ();
-		LoRaMacCommand* command = LoRaMacCommand::CommandBasedOnCid(cid, GetDirection());
+		Ptr<LoRaMacCommand> command = LoRaMacCommand::CommandBasedOnCid(cid, GetDirection());
 		counter+=command->Deserialize(i);
 		SetMacCommand(command);
+		i.Next(command->GetSerializedSize());
 	}
-//  return i.GetDistanceFrom (start);
-	return 24;
+	m_port = i.ReadU8 ();
+	return i.GetDistanceFrom (start);
+	//return 24;
 }
 
 uint8_t 
@@ -528,15 +505,14 @@ LoRaMacHeader::GetCommandsLength (void) const
 {
 	NS_LOG_FUNCTION (this);
     uint8_t size=0;
-  	for (std::list<LoRaMacCommand*>::const_iterator it = m_commands.begin() ; it != m_commands.end() ; it++) {
+  	for (std::list<Ptr<LoRaMacCommand>>::const_iterator it = m_commands.begin() ; it != m_commands.end() ; it++) {
 			size += (*it)->GetSerializedSize();
     }
 		return size;
 }
 
-//802.15.4e
 bool
-LoRaMacHeader::SetMacCommand(LoRaMacCommand* command)
+LoRaMacHeader::SetMacCommand(Ptr<LoRaMacCommand> command)
 {
 	NS_LOG_FUNCTION (this << command->GetType ());
 	if (GetCommandsLength () + command->GetSerializedSize () < 16)
@@ -547,7 +523,7 @@ LoRaMacHeader::SetMacCommand(LoRaMacCommand* command)
 	return false;
 }
 
-std::list<LoRaMacCommand* >
+std::list<Ptr<LoRaMacCommand> >
 LoRaMacHeader::GetCommandList (void) 
 {
 	NS_LOG_FUNCTION (this);
@@ -583,11 +559,13 @@ LoRaMacHeader::Merge (LoRaMacHeader header)
 				m_fctrlFrmType = LORA_MAC_CONFIRMED_DATA_UP;
 
 		// merge list of mac commands (assume it is unique, otherwise, device might answer both of them)
-		std::list <LoRaMacCommand*> commands = header.GetCommandList();
-		for (std::list <LoRaMacCommand*>::const_iterator it = commands.begin (); it != commands.end(); it++)
+		std::list <Ptr<LoRaMacCommand>> commands = header.GetCommandList();
+		for (std::list <Ptr<LoRaMacCommand >>::const_iterator it = commands.begin (); it != commands.end(); it++)
 		{
 			SetMacCommand (*it);
 		}
+		if (m_port == 0)
+			SetPort (header.GetPort ());
 	}
 }
 

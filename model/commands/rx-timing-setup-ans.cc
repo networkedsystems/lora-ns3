@@ -70,15 +70,14 @@ RxTimingSetupAns::Serialize (Buffer::Iterator start) const
 uint32_t
 RxTimingSetupAns::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	start.ReadU8();
+  return 1;
 }
 
 void
-RxTimingSetupAns::Execute (Ptr<LoRaNetDevice> nd,Address address)
+RxTimingSetupAns::Execute (Ptr<LoRaNetworkApplication> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	std::cout << "Acked" << std::endl;
 }
 
 } //namespace ns3

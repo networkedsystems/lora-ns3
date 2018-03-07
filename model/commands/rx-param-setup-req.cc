@@ -19,6 +19,7 @@
  */
 
 #include "rx-param-setup-req.h"
+#include "rx-param-setup-ans.h"
 #include <ns3/lora-mac-command.h>
 #include <ns3/address.h>
 
@@ -31,6 +32,15 @@ RxParamSetupReq::RxParamSetupReq(void)
 	
 	m_cid = RX_PARAM_SETUP;
 	m_direction = FROMBASE;
+}
+
+RxParamSetupReq::RxParamSetupReq (uint8_t rx1Offset, uint8_t rx2Dr, uint32_t rx2Freq)
+{
+	m_cid = RX_PARAM_SETUP;
+	m_direction = FROMBASE;
+	m_rx1Offset = rx1Offset;
+	m_rx2Dr = rx2Dr;
+	m_rx2Freq = rx2Freq;
 }
 
 RxParamSetupReq::~RxParamSetupReq (void)
@@ -56,7 +66,7 @@ RxParamSetupReq::GetInstanceTypeId (void) const
 uint32_t
 RxParamSetupReq::GetSerializedSize (void) const
 {
-  return 1;
+  return 5;
 }
 
 
@@ -65,21 +75,62 @@ RxParamSetupReq::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
   i.WriteU8 (m_cid);
+	uint8_t DLSettings = m_rx2Dr;
+	DLSettings |= (m_rx1Offset << 4)&0x70;
+	i.WriteU8 (DLSettings);
+	i.WriteU8 ((uint8_t)((m_rx2Freq >> 16)&0x000000ff));
+	i.WriteU8 ((uint8_t)((m_rx2Freq >> 8)&0x000000ff));
+	i.WriteU8 ((uint8_t)((m_rx2Freq)&0x000000ff));
 }
 
 
 uint32_t
 RxParamSetupReq::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	//read cid Put assert here. 
+	start.ReadU8 ();
+	uint8_t DLSettings = start.ReadU8 ();
+	m_rx2Dr = DLSettings&0x0F;
+	m_rx1Offset = (DLSettings >> 4)&0x07;
+	m_rx2Freq = (start.ReadU8 ()<<16) & 0x00ff0000;
+	m_rx2Freq |= (start.ReadU8 ()<<8) & 0x0000ff00;
+	m_rx2Freq |= (start.ReadU8 ()) & 0x000000ff;
+  return 5;
 }
 
 void
 RxParamSetupReq::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	bool offset =	nd->SetDlOffset (m_rx1Offset);
+	bool settings = nd->SetRx2Settings (m_rx2Dr, m_rx2Freq);
+	Ptr<LoRaMacCommand> command = CreateObject<RxParamSetupAns>(offset,settings,settings);
+	nd->SetMacAnswer (command);
+}
+
+
+uint8_t RxParamSetupReq::GetRx1Offset ()
+{
+	return m_rx1Offset;
+}
+void RxParamSetupReq::SetRx1Offset (uint8_t rx1Offset)
+{
+	m_rx1Offset = rx1Offset;
+}
+uint32_t RxParamSetupReq::GetRx2Freq ()
+{
+	return m_rx2Freq;
+}
+void RxParamSetupReq::SetRx2Freq (uint32_t rx2Freq)
+{
+	m_rx2Freq = rx2Freq;
+}
+uint8_t RxParamSetupReq::GetRx2Dr ()
+{
+	return m_rx2Dr;
+}
+void RxParamSetupReq::SetRx2Dr (uint8_t rx2Dr)
+{
+	m_rx2Dr = rx2Dr;
 }
 
 } //namespace ns3

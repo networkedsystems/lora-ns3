@@ -149,8 +149,8 @@ public:
   uint32_t Deserialize (Buffer::Iterator start);
   uint8_t GetCommandsLength (void) const;
 
-  bool SetMacCommand(LoRaMacCommand* command);
-  std::list<LoRaMacCommand* > GetCommandList (void);
+  bool SetMacCommand(Ptr<LoRaMacCommand> command);
+  std::list<Ptr<LoRaMacCommand> > GetCommandList (void);
 
 	void AddChannel (uint8_t rssi, uint8_t sf);
 	std::list<std::tuple<uint8_t,uint8_t> > GetChannels ();
@@ -178,7 +178,7 @@ private:
   uint16_t m_auxFrmCntr;
 
 
-  std::list<LoRaMacCommand*> m_commands; //IE Header List
+  std::list<Ptr<LoRaMacCommand> > m_commands; //IE Header List
   std::list<std::tuple<uint8_t,uint8_t> > m_channels; //IE Header List
 
 

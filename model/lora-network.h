@@ -57,6 +57,28 @@ class NetDevice;
  * For the moment this class can only whitelist devices, but in the future, algorithms will be implemented in this class to create on overall optimal network.
  * This should be implemented as a net-device layer, but because nodes can't share information, this class is a subclass of Object.
  */
+
+struct DeviceRxSettings
+{
+	uint8_t delay;
+	uint8_t dr1Offset;
+	uint8_t dr2;
+	uint32_t frequency;
+};
+
+struct PacketId
+{
+	Address address;
+	uint32_t packetCounter;
+};
+
+struct PacketStats
+{
+	double maxRssi;
+	uint32_t gwCount;
+	Address strongestGateway;
+};
+
 class LoRaNetwork : public Application
 {
 public:
@@ -82,11 +104,11 @@ public:
 
   /**
    * \return true if and only if there is no ack send by any other gateway.
-   * \param packet packet that is received at a LoRaNetDeviceGW.
+   * \param packet packet that is received at a LoRaGwNetDevice.
    * \param protocol protocol that is used. 
    * \param address address of sending device.
    * 
-   * This function connects to receivecallback of a LoRaNetDeviceGw. This could be multiple.
+   * This function connects to receivecallback of a LoRaGwNetDevice. This could be multiple.
    */
   bool MessageReceived (Ptr<const Packet> packet, const Address& from) ;
 
@@ -107,6 +129,27 @@ public:
   void WhiteListDevice (const Address& address);
 
 	/**
+		* Set the delay of a device 
+		* 
+		* \param address address to set the delay of
+		* \param delay the delay for the provided device
+		*/
+  void SetDelayOfDevice (const Address& address, uint8_t delay);
+	
+	/**
+		* Set the rx parameters for the device 
+		* 
+		* \param address address to set the parameters of
+		* \param offset the offset for slot 1
+		* \param dr the datarate for slot 2
+		* \param freq the frequency for slot 2
+		*/
+  void SetSettingsOfDevice (const Address& address, uint8_t offset, uint8_t dr, uint32_t freq);
+
+	uint8_t GetCount (const Address& address);
+	uint8_t GetMargin (const Address& address);
+
+	/**
 		* Do dispose this object
 		*/
 	virtual void DoDispose (void);
@@ -116,12 +159,11 @@ private:
 	Ptr<Socket> m_socket; //!< socket for the application 
 	Ptr<NormalRandomVariable> m_random; //!< random variable
   std::vector <Address> justSend; //!<list of the latest received messages to prevent responding to to many messages
-	std::list<std::tuple<Address, double, uint8_t,uint8_t,uint16_t> > m_RSSI; //!< The RSSI of all whitelisted nodes
-	std::list<std::tuple<Address, uint32_t> > m_latest; //!<the latest frame number received for each device 
-	std::list<std::tuple<Address, uint16_t, uint8_t, uint8_t> > m_settings; //!< list to keep track of the settings of each node
+	std::map <Address, uint32_t> m_latest; //!<the latest frame number received for each device 
+	std::map <Address, DeviceRxSettings > m_settings; //!< list to keep track of the settings of each node
 	std::vector <Address> m_whiteList; //!< list of all the whitelisted addresses
 	std::map <Address, Ptr<Packet> > m_packetToTransmit; //!< Map of the messages to send to each address
-
+	std::map <Address,PacketStats> m_stats; 
 	// Callback functions
 	/**
 		* The callback to notify the listeners that a messages has been arrived at the gateway.
@@ -144,10 +186,9 @@ private:
 	/**
 		* SendACK sends a message to a gateway with the message to transmit or not to 
 		*
-		* \param gateway gateway address to send the message from
 		* \param sensor sensor address to send the message to
 		*/
-  void SendAck (const Address& gateway, const Address& sensor);
+  void SendAck (const Address& sensor);
 	
 	/**
 		* This function checks whether the given address is whitelisted in this network.

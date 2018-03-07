@@ -16,8 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Authors:
- *  Gary Pei <guangyu.pei@boeing.com>
- *  Tom Henderson <thomas.r.henderson@boeing.com>
+ *	Brecht Reynders <brecht.reynders@esat.kuleuven.be>
  */
 #include "lora-helper.h"
 #include <ns3/lora-module.h>
@@ -75,12 +74,14 @@ LoRaHelper::LoRaHelper (void)
 
   Ptr<ConstantSpeedPropagationDelayModel> delayModel = CreateObject<ConstantSpeedPropagationDelayModel> ();
   m_channel->SetPropagationDelayModel (delayModel);
+	m_spectrumModel = 0;
 }
 
 LoRaHelper::~LoRaHelper (void)
 {
   m_channel->Dispose ();
   m_channel = 0;
+	m_spectrumModel = 0;
 }
 
 void
@@ -169,6 +170,10 @@ LoRaHelper::Install (NodeContainer c)
 		Ptr<LoRaNetDevice> anandi = CreateObject<LoRaNetDevice> ();
 		devices.Add(anandi);
 		Ptr<LoRaPhy> sfp = Create<LoRaPhy> ();
+		if (m_spectrumModel == 0)
+			m_spectrumModel = sfp->GetRxSpectrumModel();
+		else
+			sfp->SetRxSpectrumModel (m_spectrumModel);
 		anandi->SetPhy (sfp);
 		anandi->SetChannel (m_channel);
 		anandi->SetAddress(Mac32Address::Allocate());
@@ -193,15 +198,19 @@ LoRaHelper::Install (NodeContainer c)
 }
 
 NetDeviceContainer
-LoRaHelper::InstallTsch (NodeContainer c)
+LoRaHelper::InstallRs (NodeContainer c)
 {
   NetDeviceContainer devices;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); i++)
     {
 		Ptr<Node> nodeI = *i;
-		Ptr<LoRaTschNetDevice> anandi = CreateObject<LoRaTschNetDevice> ();
+		Ptr<LoRaRsNetDevice> anandi = CreateObject<LoRaRsNetDevice> ();
 		devices.Add(anandi);
 		Ptr<LoRaPhy> sfp = Create<LoRaPhy> ();
+		if (m_spectrumModel == 0)
+			m_spectrumModel = sfp->GetRxSpectrumModel();
+		else
+			sfp->SetRxSpectrumModel (m_spectrumModel);
 		anandi->SetPhy (sfp);
 		anandi->SetChannel (m_channel);
 		anandi->SetAddress(Mac32Address::Allocate());
@@ -212,11 +221,11 @@ LoRaHelper::InstallTsch (NodeContainer c)
 		sfp->SetRxAntenna (Create<IsotropicAntennaModel> ());
 		nodeI->AddDevice(anandi);
 		anandi->SetGenericPhyTxStartCallback (MakeCallback(&LoRaPhy::StartTx,sfp));
-		sfp->SetTransmissionEndCallback( MakeCallback(&LoRaTschNetDevice::NotifyTransmissionEnd,anandi));
-		sfp->SetReceptionEndCallback ( MakeCallback(&LoRaTschNetDevice::NotifyReceptionEndOk,anandi));
-		sfp->SetReceptionErrorCallback ( MakeCallback(&LoRaTschNetDevice::NotifyReceptionEndError,anandi));
-		sfp->SetReceptionStartCallback ( MakeCallback(&LoRaTschNetDevice::NotifyReceptionStart,anandi));
-		sfp->SetReceptionMacCallback (MakeCallback(&LoRaTschNetDevice::CheckCorrectReceiver,anandi));
+		sfp->SetTransmissionEndCallback( MakeCallback(&LoRaRsNetDevice::NotifyTransmissionEnd,anandi));
+		sfp->SetReceptionEndCallback ( MakeCallback(&LoRaRsNetDevice::NotifyReceptionEndOk,anandi));
+		sfp->SetReceptionErrorCallback ( MakeCallback(&LoRaRsNetDevice::NotifyReceptionEndError,anandi));
+		sfp->SetReceptionStartCallback ( MakeCallback(&LoRaRsNetDevice::NotifyReceptionStart,anandi));
+		sfp->SetReceptionMacCallback (MakeCallback(&LoRaRsNetDevice::CheckCorrectReceiver,anandi));
     for (std::list<callbacktuple>::iterator it = m_callbacks.begin(); it!= m_callbacks.end();it++)
     	{
   			anandi->TraceConnectWithoutContext(std::get<0>(*it),std::get<1>(*it));
@@ -232,8 +241,12 @@ LoRaHelper::InstallGateways (NodeContainer c)
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); i++)
   {
   	Ptr<Node> nodeJ = *i;
-  	Ptr<LoRaNetDeviceGw> anand = CreateObject<LoRaNetDeviceGw> ();
-  	Ptr<LoRaPhyGw> sfp = Create<LoRaPhyGw> ();
+  	Ptr<LoRaRsGwNetDevice> anand = CreateObject<LoRaRsGwNetDevice> ();
+  	Ptr<LoRaGwPhy> sfp = Create<LoRaGwPhy> ();
+		if (m_spectrumModel == 0)
+			m_spectrumModel = sfp->GetRxSpectrumModel();
+		else
+			sfp->SetRxSpectrumModel (m_spectrumModel);
   	anand->SetPhy (sfp);
   	devices.Add(anand);
   	anand->SetChannel (m_channel);
@@ -243,11 +256,11 @@ LoRaHelper::InstallGateways (NodeContainer c)
   	sfp->SetRxAntenna (Create<IsotropicAntennaModel> ());
   	anand->SetQueue(Create<DropTailQueue>());
   	nodeJ->AddDevice(anand);
-  	anand->SetGenericPhyTxStartCallback (MakeCallback(&LoRaPhyGw::StartTx,sfp));
-  	sfp->SetTransmissionEndCallback( MakeCallback(&LoRaNetDeviceGw::NotifyTransmissionEnd,anand));
-  	sfp->SetReceptionEndCallback ( MakeCallback(&LoRaNetDeviceGw::NotifyReceptionEndOk,anand));
-  	sfp->SetReceptionStartCallback ( MakeCallback(&LoRaNetDeviceGw::NotifyReceptionStart,anand));
-  	sfp->SetReceptionErrorCallback ( MakeCallback(&LoRaNetDeviceGw::NotifyReceptionEndError,anand));
+  	anand->SetGenericPhyTxStartCallback (MakeCallback(&LoRaGwPhy::StartTx,sfp));
+  	sfp->SetTransmissionEndCallback( MakeCallback(&LoRaRsGwNetDevice::NotifyTransmissionEnd,anand));
+  	sfp->SetReceptionEndCallback ( MakeCallback(&LoRaRsGwNetDevice::NotifyReceptionEndOk,anand));
+  	sfp->SetReceptionStartCallback ( MakeCallback(&LoRaRsGwNetDevice::NotifyReceptionStart,anand));
+  	sfp->SetReceptionErrorCallback ( MakeCallback(&LoRaRsGwNetDevice::NotifyReceptionEndError,anand));
     for (std::list<callbacktuple>::iterator it = m_gatewayCallbacks.begin(); it!= m_gatewayCallbacks.end();it++)
     {
   		anand->TraceConnectWithoutContext(std::get<0>(*it),std::get<1>(*it));
@@ -258,14 +271,18 @@ LoRaHelper::InstallGateways (NodeContainer c)
 }
 
 NetDeviceContainer
-LoRaHelper::InstallTschGateways (NodeContainer c)
+LoRaHelper::InstallRsGateways (NodeContainer c)
 {
   NetDeviceContainer devices;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); i++)
   {
   	Ptr<Node> nodeJ = *i;
-  	Ptr<LoRaTschNetDeviceGw> anand = CreateObject<LoRaTschNetDeviceGw> ();
-  	Ptr<LoRaPhyGw> sfp = Create<LoRaPhyGw> ();
+  	Ptr<LoRaRsGwNetDevice> anand = CreateObject<LoRaRsGwNetDevice> ();
+  	Ptr<LoRaGwPhy> sfp = Create<LoRaGwPhy> ();
+		if (m_spectrumModel == 0)
+			m_spectrumModel = sfp->GetRxSpectrumModel();
+		else
+			sfp->SetRxSpectrumModel (m_spectrumModel);
   	anand->SetPhy (sfp);
   	devices.Add(anand);
   	anand->SetChannel (m_channel);
@@ -275,11 +292,11 @@ LoRaHelper::InstallTschGateways (NodeContainer c)
   	sfp->SetRxAntenna (Create<IsotropicAntennaModel> ());
   	anand->SetQueue(Create<DropTailQueue>());
   	nodeJ->AddDevice(anand);
-  	anand->SetGenericPhyTxStartCallback (MakeCallback(&LoRaPhyGw::StartTx,sfp));
-  	sfp->SetTransmissionEndCallback( MakeCallback(&LoRaTschNetDeviceGw::NotifyTransmissionEnd,anand));
-  	sfp->SetReceptionEndCallback ( MakeCallback(&LoRaTschNetDeviceGw::NotifyReceptionEndOk,anand));
-  	sfp->SetReceptionStartCallback ( MakeCallback(&LoRaTschNetDeviceGw::NotifyReceptionStart,anand));
-  	sfp->SetReceptionErrorCallback ( MakeCallback(&LoRaTschNetDeviceGw::NotifyReceptionEndError,anand));
+  	anand->SetGenericPhyTxStartCallback (MakeCallback(&LoRaGwPhy::StartTx,sfp));
+  	sfp->SetTransmissionEndCallback( MakeCallback(&LoRaRsGwNetDevice::NotifyTransmissionEnd,anand));
+  	sfp->SetReceptionEndCallback ( MakeCallback(&LoRaRsGwNetDevice::NotifyReceptionEndOk,anand));
+  	sfp->SetReceptionStartCallback ( MakeCallback(&LoRaRsGwNetDevice::NotifyReceptionStart,anand));
+  	sfp->SetReceptionErrorCallback ( MakeCallback(&LoRaRsGwNetDevice::NotifyReceptionEndError,anand));
     for (std::list<callbacktuple>::iterator it = m_gatewayCallbacks.begin(); it!= m_gatewayCallbacks.end();it++)
     {
   		anand->TraceConnectWithoutContext(std::get<0>(*it),std::get<1>(*it));

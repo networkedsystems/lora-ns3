@@ -19,6 +19,7 @@
  */
 
 #include "link-check-req.h"
+#include "link-check-ans.h"
 #include <ns3/lora-mac-command.h>
 #include <ns3/address.h>
 
@@ -77,15 +78,20 @@ LinkCheckReq::Serialize (Buffer::Iterator start) const
 uint32_t
 LinkCheckReq::Deserialize (Buffer::Iterator start)
 {
-  return 0;
+	start.ReadU8 ();
+  return 1;
 }
 
 void
-LinkCheckReq::Execute (Ptr<LoRaNetDevice> nd,Address address)
+LinkCheckReq::Execute(Ptr<LoRaNetworkApplication> app, Address address)
 {
-	//nd->GetSNR();
-	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
-	//nd->SetMacAnswer (command);
+	if (app!=0)
+	{
+		uint8_t margin = app->GetNetwork()->GetMargin(address);
+		uint8_t count = app->GetNetwork()->GetCount(address);
+		Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
+		app->SetMacAnswer (command);
+	}
 }
 
 } //namespace ns3

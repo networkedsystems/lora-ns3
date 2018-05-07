@@ -162,6 +162,10 @@ LoRaRadioEnergyModel::HandleEnergyRecharged (){
 }
 
 void
+LoRaRadioEnergyModel::HandleEnergyChanged (){
+}
+
+void
 LoRaRadioEnergyModel::ChangeLoRaState (LoRaPhy::State newstate)
 {
   NS_LOG_FUNCTION (this << newstate);

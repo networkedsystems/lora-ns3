@@ -41,7 +41,6 @@ class LoRaGwPhy;
 class SpectrumChannel;
 class Channel;
 class SpectrumErrorModel;
-class Queue;
 
 
 

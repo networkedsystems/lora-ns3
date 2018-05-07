@@ -86,11 +86,11 @@ namespace ns3 {
 						Mac32AddressValue (Mac32Address ("00:00:00:01")),
 						MakeMac32AddressAccessor (&LoRaNetDevice::m_address),
 						MakeMac32AddressChecker ())
-				.AddAttribute ("Queue",
-						"packets being transmitted get queued here",
-						PointerValue (),
-						MakePointerAccessor (&LoRaNetDevice::m_queue),
-						MakePointerChecker<Queue> ())
+//			.AddAttribute ("Queue",
+//					"packets being transmitted get queued here",
+//					PointerValue (),
+//					MakePointerAccessor (&LoRaNetDevice::m_queue),
+//					MakePointerChecker<Queue<QueueItem>> ())
 				.AddAttribute ("Mtu", "The Maximum Transmission Unit",
 						UintegerValue (255),
 						MakeUintegerAccessor (&LoRaNetDevice::SetMtu,
@@ -230,7 +230,7 @@ uint32_t
 
 
 	void
-		LoRaNetDevice::SetQueue (Ptr<Queue> q)
+		LoRaNetDevice::SetQueue (Ptr<Queue<QueueItem>> q)
 		{
 			NS_LOG_FUNCTION (q);
 			m_queue = q;

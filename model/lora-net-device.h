@@ -30,6 +30,7 @@
 #include <ns3/traced-callback.h>
 #include <ns3/nstime.h>
 #include <ns3/ptr.h>
+#include <ns3/queue-item.h>
 #include <ns3/mac32-address.h>
 #include <ns3/generic-phy.h>
 #include <ns3/random-variable-stream.h>
@@ -41,10 +42,9 @@ class LoRaPhy;
 class SpectrumChannel;
 class Channel;
 class SpectrumErrorModel;
-class Queue;
 class LoRaMacHeader;
 class LoRaMacCommand;
-
+template <typename Item> class Queue;
 
 
 /**
@@ -81,7 +81,7 @@ public:
    *
    * \param queue the wanted queue structure
    */
-  virtual void SetQueue (Ptr<Queue> queue);
+  virtual void SetQueue (Ptr<Queue<QueueItem>> queue);
 
 
   /**
@@ -357,7 +357,7 @@ public:
 
 protected:
 
-  Ptr<Queue> m_queue; //!< queue for packets to send
+  Ptr<Queue<QueueItem>> m_queue; //!< queue for packets to send
   Ptr<Node>    m_node; //!< node of this netdevice
   Ptr<Channel> m_channel; //!< channel that is used
   Mac32Address m_address; //!< address of this device

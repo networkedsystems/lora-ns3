@@ -43,7 +43,8 @@ def build(bld):
 	  'model/commands/rx-param-setup-req.cc',
 	  'model/commands/new-channel-req.cc',
 	  'model/commands/rx-timing-setup-req.cc',
-	  'model/gw-trailer.cc'
+	  'model/gw-trailer.cc',
+	  'model/mac32-address.cc'
 		]
 
 	obj.cxxflags=['-finstrument-functions']
@@ -93,7 +94,8 @@ def build(bld):
     'model/commands/rx-param-setup-req.h',
     'model/commands/new-channel-req.h',
     'model/commands/rx-timing-setup-req.h',
-    'model/gw-trailer.h'
+    'model/gw-trailer.h',
+	  'model/mac32-address.h'
 		]
 
 #  if (bld.env['ENABLE_EXAMPLES']):

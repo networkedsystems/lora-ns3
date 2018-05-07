@@ -41,7 +41,6 @@ namespace ns3 {
   class SpectrumChannel;
   class Channel;
   class SpectrumErrorModel;
-  class Queue;
 
 
 

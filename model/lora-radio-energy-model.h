@@ -111,6 +111,11 @@ public:
   void HandleEnergyRecharged (void);
 
   /**
+   * Implements DeviceEnergyModel::HandleEnergyChanged
+   */
+  void HandleEnergyChanged (void);
+
+  /**
    * \brief Change state of the LoRaRadioEnergyMode
    */
   void ChangeLoRaState ( LoRaPhy::State newstate);

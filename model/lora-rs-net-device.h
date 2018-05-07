@@ -41,7 +41,6 @@ class LoRaPhy;
 class SpectrumChannel;
 class Channel;
 class SpectrumErrorModel;
-class Queue;
 class LoRaMacHeader;
 class LoRaMacCommand;
 

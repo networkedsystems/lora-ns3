@@ -177,7 +177,7 @@ LoRaHelper::Install (NodeContainer c)
 		anandi->SetPhy (sfp);
 		anandi->SetChannel (m_channel);
 		anandi->SetAddress(Mac32Address::Allocate());
-		anandi->SetQueue(CreateObject<DropTailQueue>());
+		anandi->SetQueue(Create<DropTailQueue<QueueItem>>());
 		sfp->SetDevice(anandi);
 		sfp->SetMobility (nodeI->GetObject<MobilityModel> ());
 		sfp->SetChannel (m_channel);
@@ -214,7 +214,7 @@ LoRaHelper::InstallRs (NodeContainer c)
 		anandi->SetPhy (sfp);
 		anandi->SetChannel (m_channel);
 		anandi->SetAddress(Mac32Address::Allocate());
-		anandi->SetQueue(CreateObject<DropTailQueue>());
+		anandi->SetQueue(Create<DropTailQueue<QueueItem>>());
 		sfp->SetDevice(anandi);
 		sfp->SetMobility (nodeI->GetObject<MobilityModel> ());
 		sfp->SetChannel (m_channel);
@@ -254,7 +254,7 @@ LoRaHelper::InstallGateways (NodeContainer c)
   	sfp->SetMobility (nodeJ->GetObject<MobilityModel> ());
   	sfp->SetChannel (m_channel);
   	sfp->SetRxAntenna (Create<IsotropicAntennaModel> ());
-  	anand->SetQueue(Create<DropTailQueue>());
+		anand->SetQueue(Create<DropTailQueue<QueueItem>>());
   	nodeJ->AddDevice(anand);
   	anand->SetGenericPhyTxStartCallback (MakeCallback(&LoRaGwPhy::StartTx,sfp));
   	sfp->SetTransmissionEndCallback( MakeCallback(&LoRaRsGwNetDevice::NotifyTransmissionEnd,anand));
@@ -290,7 +290,7 @@ LoRaHelper::InstallRsGateways (NodeContainer c)
   	sfp->SetMobility (nodeJ->GetObject<MobilityModel> ());
   	sfp->SetChannel (m_channel);
   	sfp->SetRxAntenna (Create<IsotropicAntennaModel> ());
-  	anand->SetQueue(Create<DropTailQueue>());
+		anand->SetQueue(Create<DropTailQueue<QueueItem>>());
   	nodeJ->AddDevice(anand);
   	anand->SetGenericPhyTxStartCallback (MakeCallback(&LoRaGwPhy::StartTx,sfp));
   	sfp->SetTransmissionEndCallback( MakeCallback(&LoRaRsGwNetDevice::NotifyTransmissionEnd,anand));

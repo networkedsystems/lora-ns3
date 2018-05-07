@@ -43,6 +43,20 @@
 #include <ns3/lora-mac-command.h>
 
 namespace ns3 {
+/**
+ * \brief Write an Mac32Address to a Buffer
+ * \param i a reference to the buffer to write to
+ * \param ad the Mac32address
+ */
+void WriteTo (Buffer::Iterator &i, Mac32Address ad);
+
+/**
+ * \brief Read a Mac32Address from a Buffer
+ * \param i a reference to the buffer to read from
+ * \param ad a reference to the Mac32Address to be read
+ */
+void ReadFrom (Buffer::Iterator &i, Mac32Address &ad);
+
 
 /*
  * \ingroup lora

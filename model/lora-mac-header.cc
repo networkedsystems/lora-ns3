@@ -22,11 +22,24 @@
 #include "lora-mac-header.h"
 #include <ns3/address-utils.h>
 #include "lora-mac-command.h"
+#include "ns3/mac32-address.h"
 #include <ns3/log.h>
 
 #include <list>
 #include <tuple>
 namespace ns3 {
+void WriteTo (Buffer::Iterator &i, Mac32Address ad)
+{
+  uint8_t mac[4];
+  ad.CopyTo (mac);
+  i.Write (mac, 4);
+}
+void ReadFrom (Buffer::Iterator &i, Mac32Address &ad)
+{
+  uint8_t mac[4];
+  i.Read (mac, 4);
+  ad.CopyFrom (mac);
+}
 
 NS_OBJECT_ENSURE_REGISTERED (LoRaMacHeader);
 NS_LOG_COMPONENT_DEFINE ("LoRaMacHeader");

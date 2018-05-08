@@ -37,7 +37,6 @@
 
 namespace ns3 {
 
-  class LoRaGwPhy;
   class SpectrumChannel;
   class Channel;
   class SpectrumErrorModel;

@@ -38,7 +38,6 @@
 
 namespace ns3 {
 
-	class LoRaNetDevice;
 	class Address;
 
 	// Defining new comman CIDs (this list should be updated whenever there are new commands)

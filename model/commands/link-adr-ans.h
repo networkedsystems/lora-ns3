@@ -23,7 +23,6 @@
 
 #include <ns3/lora-mac-command.h>
 namespace ns3 {
-class LoRaNetDevice;
 class LoRaNetworkApplication;
 
 /*

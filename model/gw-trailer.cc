@@ -68,7 +68,9 @@ void
 GwTrailer::Serialize (Buffer::Iterator start) const
 {
   start.Prev (sizeof(double)+4);
-	const uint8_t* value = reinterpret_cast<const uint8_t*>(&m_rssi);
+	uint8_t value[sizeof(double)];
+	memcpy(value,&m_rssi,sizeof(double));
+	//const uint8_t* value = reinterpret_cast<const uint8_t*>(&m_rssi);
   start.Write (value,sizeof(double));
 	start.WriteU32 (m_gatewayId);
 }
@@ -79,7 +81,8 @@ GwTrailer::Deserialize (Buffer::Iterator start)
   start.Prev (sizeof(double)+4);
 	uint8_t value[sizeof(double)];
   start.Read (value,sizeof(double));
-	m_rssi = *reinterpret_cast<double*>(value);
+	memcpy(value,&m_rssi,sizeof(double));
+	//m_rssi = *reinterpret_cast<double*>(value);
 	m_gatewayId = start.ReadU32 ();
 
   return sizeof(double)+4;

@@ -440,13 +440,13 @@ uint32_t
 			if (m_state == IDLE)
 			{
 				Simulator::Remove(m_event);
-				Simulator::ScheduleNow(&LoRaNetDevice::TryAgain,this);
 				NS_LOG_LOGIC ("enqueueing new packet");
 				if (m_queue->Enqueue (Create<QueueItem> (packet)) == false)
 				{
 					m_macTxDropTrace (packet);
 					sendOk = false;
 				}
+				Simulator::ScheduleNow(&LoRaNetDevice::TryAgain,this);
 			}
 			else
 			{
@@ -747,6 +747,7 @@ uint32_t
 				// Get new message from the queue
 				if(m_currentPkt==0)
 				{
+					NS_LOG_LOGIC("Checking new transmission" << m_queue->IsEmpty());
 					if (m_queue->IsEmpty () == false)
 					{
 						startTimePacket = Simulator::Now();

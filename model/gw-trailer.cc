@@ -81,7 +81,7 @@ GwTrailer::Deserialize (Buffer::Iterator start)
   start.Prev (sizeof(double)+4);
 	uint8_t value[sizeof(double)];
   start.Read (value,sizeof(double));
-	memcpy(value,&m_rssi,sizeof(double));
+	memcpy(&m_rssi,value,sizeof(double));
 	//m_rssi = *reinterpret_cast<double*>(value);
 	m_gatewayId = start.ReadU32 ();
 

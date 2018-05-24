@@ -440,7 +440,7 @@ protected:
 	 * This is the actual implementation.
 	 * But this can be overridden by other mac protocols
    */
-	void DoCheckReception ();
+	virtual void DoCheckReception ();
 
   /**
    * Reception slot 2. The receiver checks whether there is a packet arriving. 

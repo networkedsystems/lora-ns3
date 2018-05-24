@@ -130,8 +130,20 @@ namespace ns3 {
 		LoRaRsNetDevice::DoPrepareReception (uint32_t bandwidthSetting, uint32_t frequency, uint32_t spreadingfactor)
 		{
 			NS_LOG_FUNCTION(this << bandwidthSetting << frequency << spreadingfactor);
+			std::cout << m_state << std::endl;
 			NS_ASSERT(m_state!= RETRANSMISSION);
 			NS_ASSERT(m_state!= TX);
+			// RECOVER STATE after BEACON transmission
+			if (m_state != RX1_PENDING && m_state != RX2_PENDING)
+			{
+				if(Simulator::GetDelayLeft(m_event2) == Seconds(0))
+				{
+					m_state = RX2_PENDING;
+				}
+				else
+					m_state = RX1_PENDING;
+
+			}
 			if (Simulator::GetDelayLeft(m_beaconTimeout) <= 0)
 			{
 				if (m_state != BEACON && m_state!=RX)

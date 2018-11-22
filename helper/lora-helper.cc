@@ -29,10 +29,8 @@
 #include <ns3/isotropic-antenna-model.h>
 #include <ns3/drop-tail-queue.h>
 #include <ns3/log.h>
-#include <ns3/double.h>
 #include "ns3/names.h"
 #include <ns3/random-variable-stream.h>
-#include <ns3/pointer.h>
 
 namespace ns3 {
 
@@ -618,85 +616,6 @@ LoRaHelper::InstallNetworkApplication (std::string type,
   factory.Set (n7, v7);
   m_netApp.push_back(factory);
 }
-
-NodeContainer
-LoRaHelper::AddInterference (MobilityHelper helper)
-{
-	NodeContainer container;
-	double lambdas[] = {5,4,15};
-	// Create one noise file per LoRa Channel
-	// this is based on measurements done in Leuven, Belgium
-	for (uint32_t i = 868100000; i<868600000; i+= 200000)
-	{
-		Ptr<Node> node = CreateObject<Node>();
-		// create Noise model
-		Ptr<NoiseIsm> noise = CreateObject<NoiseIsm>();
-		noise->SetMobility(node->GetObject<MobilityModel>());
-		noise->SetChannel (m_channel);
-		Ptr<RandomVariableStream> fc = CreateObject<NormalRandomVariable>();
-		fc->SetAttribute ("Mean",DoubleValue(i));
-		fc->SetAttribute ("Variance",DoubleValue(200));
-		noise->SetAttribute("CenterFrequency",PointerValue(fc));
-		Ptr<RandomVariableStream> bandwidth = CreateObject<RandomMixture>();
-		Ptr<RandomVariableStream> bandwidth1 = CreateObject<NormalRandomVariable>();
-		bandwidth1->SetAttribute ("Mean",DoubleValue(18000));
-		bandwidth1->SetAttribute ("Variance",DoubleValue(3e8));
-		Ptr<RandomVariableStream> bandwidth2 = CreateObject<NormalRandomVariable>();
-		bandwidth2->SetAttribute ("Mean",DoubleValue(115000));
-		bandwidth2->SetAttribute ("Variance",DoubleValue(1e8));
-		DynamicCast<RandomMixture>(bandwidth)->AddNewDistribution(1,bandwidth1);
-		DynamicCast<RandomMixture>(bandwidth)->AddNewDistribution(10,bandwidth2);
-		noise->SetAttribute("Bandwidth",PointerValue(bandwidth));
-		Ptr<RandomMixture> length = CreateObject<RandomMixture>();
-		Ptr<RandomVariableStream> length1 = CreateObject<NormalRandomVariable>();//23
-		length1->SetAttribute ("Mean",DoubleValue(0.05));
-		length1->SetAttribute ("Variance",DoubleValue(8e-7));
-		Ptr<RandomVariableStream> length2 = CreateObject<NormalRandomVariable>();//31
-		length2->SetAttribute ("Mean",DoubleValue(0.01));
-		length2->SetAttribute ("Variance",DoubleValue(5e-7));
-		Ptr<RandomVariableStream> length3 = CreateObject<NormalRandomVariable>();//15
-		length3->SetAttribute ("Mean",DoubleValue(0.015));
-		length3->SetAttribute ("Variance",DoubleValue(8e-7));
-		Ptr<RandomVariableStream> length4 = CreateObject<NormalRandomVariable>();//5
-		length4->SetAttribute ("Mean",DoubleValue(0.02));
-		length4->SetAttribute ("Variance",DoubleValue(11e-7));
-		length->AddNewDistribution(23,length1);
-		length->AddNewDistribution(31,length2);
-		length->AddNewDistribution(15,length3);
-		length->AddNewDistribution(5,length4);
-		noise->SetAttribute("MessageLength",PointerValue(DynamicCast<RandomVariableStream>(length)));
-		Ptr<RandomVariableStream> time = CreateObject<ExponentialRandomVariable> ();
-		time->SetAttribute("Mean",DoubleValue(60/lambdas[(i-868100000)/200000]));
-		noise->SetAttribute("StartTime",PointerValue(time));
-		noise->StartNoise();
-		node->AggregateObject(noise);
-		container.Add(node);
-	}
-	// and now the "reliable" downlink channel
-	Ptr<Node> node = CreateObject<Node>();
-	// create Noise model
-	Ptr<NoiseIsm> noise = CreateObject<NoiseIsm>();
-	noise->SetMobility(node->GetObject<MobilityModel>());
-	noise->SetChannel (m_channel);
-	Ptr<RandomVariableStream> fc = CreateObject<UniformRandomVariable>();
-	fc->SetAttribute ("Min",DoubleValue(869475000));
-	fc->SetAttribute ("Max",DoubleValue(869600000));
-	noise->SetAttribute("CenterFrequency",PointerValue(fc));
-	Ptr<RandomVariableStream> bandwidth = CreateObject<ExponentialRandomVariable>();
-	bandwidth->SetAttribute ("Mean",DoubleValue(9300));
-	noise->SetAttribute("Bandwidth",PointerValue(bandwidth));
-	Ptr<RandomVariableStream> length = CreateObject<ExponentialRandomVariable>();//23
-	length->SetAttribute ("Mean",DoubleValue(0.001));
-	noise->SetAttribute("MessageLength",PointerValue(length));
-	Ptr<RandomVariableStream> time = CreateObject<ExponentialRandomVariable> ();
-	time->SetAttribute("Mean",DoubleValue(18));
-	noise->SetAttribute("StartTime",PointerValue(time));
-	noise->StartNoise();
-	node->AggregateObject(noise);
-	container.Add(node);
-	helper.Install (container);
-	return container;
-}
-
+	
 } // namespace ns3
 

@@ -63,7 +63,7 @@ LoRaNetworkTrailer::GetInstanceTypeId (void) const
 void
 LoRaNetworkTrailer::Print (std::ostream &os) const
 {
-  os << " RSSI = " << m_delay << ", offset = " << m_rx1Offset << ", data rate = " << m_rx2Dr << ", Frequency = " << m_rx2Freq << std::endl;
+  os << " RSSI = " << (uint32_t)m_delay << ", offset = " << (uint32_t)m_rx1Offset << ", data rate = " << (uint32_t)m_rx2Dr << ", Frequency = " << m_rx2Freq << std::endl;
 }
 
 uint32_t

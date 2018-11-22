@@ -264,6 +264,10 @@ namespace ns3 {
 			if (m_packetToTransmit [mac.GetAddr()]==0)
 			{
 				NS_LOG_LOGIC("Queue for this device was empty.");
+				// Add trailer such that GW knows what to do with it.
+				DeviceRxSettings theseSettings = m_settings[mac.GetAddr()];
+				LoRaNetworkTrailer trailer = LoRaNetworkTrailer(theseSettings.delay,theseSettings.dr1Offset,theseSettings.dr2,theseSettings.frequency);
+				copy->AddTrailer (trailer);
 				m_packetToTransmit [mac.GetAddr()] = copy;
 			}
 			else

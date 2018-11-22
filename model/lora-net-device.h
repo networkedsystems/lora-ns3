@@ -363,6 +363,7 @@ protected:
   Mac32Address m_address; //!< address of this device
 
   Ptr<UniformRandomVariable> m_random; //!< random generator
+	bool m_reliable; //!< send relaible message
   uint32_t m_ifIndex; //!< indexnumber of the interface
   uint32_t m_mtu; //!< maximal amount of bytes to transmit
 	uint8_t m_nbRep; //!< amount of repetitions for 1 packet in unacknowledged data.

@@ -106,6 +106,14 @@ namespace ns3 {
 			 */
 			virtual void ConfirmChannelMask (const Address& address){};
 
+			/**
+			 * \param address of the node that has transmitted the MAC command
+			 * The following functions are needed for the mac command: NewChannelAns
+			 * They do not need to be implemented except if needed for one or the other reason.
+			 *
+			 * ConfirmFrequency confirms the new frequency given to a node
+			 */
+			virtual void ConfirmFrequency (const Address& address){};
 
 
 		protected:

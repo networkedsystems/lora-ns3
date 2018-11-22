@@ -86,11 +86,11 @@ namespace ns3 {
 						Mac32AddressValue (Mac32Address ("00:00:00:01")),
 						MakeMac32AddressAccessor (&LoRaNetDevice::m_address),
 						MakeMac32AddressChecker ())
-//			.AddAttribute ("Queue",
-//					"packets being transmitted get queued here",
-//					PointerValue (),
-//					MakePointerAccessor (&LoRaNetDevice::m_queue),
-//					MakePointerChecker<Queue<QueueItem>> ())
+  			.AddAttribute ("Reliable",
+  					"packets are transmitted reliably AKA the request an ACK",
+  					BooleanValue(false),
+  					MakeBooleanAccessor (&LoRaNetDevice::m_reliable),
+            MakeBooleanChecker ())
 				.AddAttribute ("Mtu", "The Maximum Transmission Unit",
 						UintegerValue (255),
 						MakeUintegerAccessor (&LoRaNetDevice::SetMtu,
@@ -171,6 +171,7 @@ namespace ns3 {
 			m_phyMacTxStartCallback = MakeNullCallback< bool, Ptr<Packet> > ();
 			m_rxCallback = MakeNullCallback <bool, Ptr<NetDevice>, Ptr<const Packet>, uint16_t, const Address& > ();
 			m_promiscRxCallback = MakeNullCallback <bool, Ptr<NetDevice>,Ptr<const Packet>, uint16_t, const Address&, const Address&, PacketType > ();
+			m_answers.erase (m_answers.begin(),m_answers.end());
 			NetDevice::DoDispose ();
 		}
 
@@ -420,14 +421,18 @@ uint32_t
 			// ignore all destination addresses, all packets are for base station anyway, but keep to be compatible with NetDevice
 			// also the address field is just this device. 
 			NS_LOG_FUNCTION (packet << src << dest << protocolNumber);
-			LoRaMacHeader header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP,1);
+			LoRaMacHeader header;
+			if (m_reliable)
+				header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP,1);
+			else
+				header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP,1);
 			header.SetAddr (m_address);
 			header.SetNoAck();
 			header.SetPort (protocolNumber);
-			if (m_seqNum%10 == 4)
-			{
-				header.SetMacCommand(CreateObject <LinkCheckReq> ());
-			}
+			//if (m_seqNum%10 == 4)
+			//{
+			//	header.SetMacCommand(CreateObject <LinkCheckReq> ());
+			//}
 			packet->AddHeader (header);
 
 
@@ -561,12 +566,17 @@ uint32_t
 		{
 			NS_LOG_FUNCTION((uint32_t)maxSetting);
 			NS_ASSERT (maxSetting < 0x0F);
+			bool change = false;
 			for (uint8_t i=0; i<16; i++)
 			{
-				datarate[i] = maxSetting;
-				maxDatarate[i] = maxSetting;
+				if (maxSetting <= maxDatarate[i])
+				{
+					change = true;
+					datarate[i] = maxSetting;
+				//maxDatarate[i] = maxSetting;
+				}
 			}
-			return true;
+			return change;
 		}
 	
 	bool
@@ -579,6 +589,14 @@ uint32_t
 			return true;
 		}
 	
+	bool
+		LoRaNetDevice::SetMinDataRate (uint8_t minSetting, uint8_t index)
+		{
+			NS_LOG_FUNCTION((uint32_t)minSetting << (uint32_t) index);
+			NS_ASSERT (minSetting < 0x0F);
+			minDatarate[index] = minSetting;
+			return true;
+		}
 	bool
 		LoRaNetDevice::SetMinDataRate (uint8_t minSetting)
 		{

@@ -245,6 +245,9 @@ namespace ns3 {
 				GwTrailer trail;
 				trail.SetRssi (rssi);
 				trail.SetGateway (this->GetNode ()->GetId ());
+				trail.SetFrequency(frequency);
+				trail.SetSpreadingFactor(spreading);
+				trail.SetBandwidth(bandwidth);
 				Ptr<Packet> copy = packet->Copy();
 				copy->AddTrailer(trail);
 				m_rxCallback (this, copy, header.GetPort (), header.GetAddr ());

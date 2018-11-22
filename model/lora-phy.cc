@@ -194,7 +194,7 @@ LoRaPhy::GetFullTxPowerSpectralDensity (uint32_t channeloffset, double power)
 Ptr<SpectrumValue>
 LoRaPhy::GetTxPowerSpectralDensity (uint32_t channeloffset, double power)
 {
-  NS_LOG_FUNCTION(this);
+  NS_LOG_FUNCTION(this << channeloffset << power);
   // 3 banden, waarvan een heel groot deel niet gebruikt worden. 
   double txPowerDensity = power/m_bandwidth;
   //and fill it

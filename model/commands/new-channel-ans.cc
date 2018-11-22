@@ -100,7 +100,10 @@ NewChannelAns::Deserialize (Buffer::Iterator start)
 void
 NewChannelAns::Execute (Ptr<LoRaNetworkApplication> nd,Address address)
 {
-	std::cout << m_freqOk << " " << m_datarateOk << std::endl;
+	if (m_freqOk)
+		nd->ConfirmFrequency(address);
+	if (m_datarateOk)
+		nd->ConfirmDataRate(address);
 }
 	
 void 

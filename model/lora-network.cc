@@ -169,7 +169,7 @@ namespace ns3 {
 					Simulator::ScheduleNow(&LoRaNetwork::m_netRxTrace,this,packet);
 					m_packetToTransmit[header.GetAddr()] = 0;
 				}
-				if ((header.IsAdrAck () && header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP) || header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP)
+				if ((header.IsAdrAck () || header.NeedsAck()))// && header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP) || header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP)
 				{
 					LoRaMacHeader ackHeader;
 					ackHeader = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_DOWN,header.GetFrmCounter());

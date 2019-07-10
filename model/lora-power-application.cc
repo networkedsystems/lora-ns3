@@ -229,16 +229,16 @@ namespace ns3 {
 							found = true;
 							break;
 						}
-						std::cout << powerj << std::endl;
+						//std::cout << powerj << std::endl;
 					}
-					std::cout << std::get<1>(*listIt) << " < 9.5+" << (uint32_t)(5-powerSettingSecond) << "*3 " << std::get<1>(*second) << std::endl; 
+					//std::cout << std::get<1>(*listIt) << " < 9.5+" << (uint32_t)(5-powerSettingSecond) << "*3 " << std::get<1>(*second) << std::endl; 
 					next = listIt;
 					if(found)
 						break;
 					SaveSetting(std::get<0>(*listIt),5,5,channelMask);
 					std::get<3>(*listIt) = 5;
 					std::get<4>(*listIt) = channelMask;
-					std::cout << (uint32_t)channelMask << " " << (uint32_t)groupIndex << "  " << Mac32Address::ConvertFrom(std::get<0>(*listIt)).GetUInt() << " 5 2 " << (uint32_t)std::get<2>(*listIt) << " " << std::get<1>(*listIt)<< " " << Simulator::Now().GetSeconds()<< std::endl;
+					//std::cout << (uint32_t)channelMask << " " << (uint32_t)groupIndex << "  " << Mac32Address::ConvertFrom(std::get<0>(*listIt)).GetUInt() << " 5 2 " << (uint32_t)std::get<2>(*listIt) << " " << std::get<1>(*listIt)<< " " << Simulator::Now().GetSeconds()<< std::endl;
 				}
 				else
 				{
@@ -277,7 +277,7 @@ namespace ns3 {
 
 					}
 				}
-				std::cout << (uint32_t)channelMask << " " << (uint32_t)groupIndex << "  " << Mac32Address::ConvertFrom(std::get<0>(*listIt)).GetUInt() << " " <<  (uint32_t) sfSetting << " " << (uint32_t)powerSetting << " " << (uint32_t)std::get<2>(*listIt) << " " << std::get<1>(*listIt)<< " " << Simulator::Now().GetSeconds()<< std::endl;
+				//std::cout << (uint32_t)channelMask << " " << (uint32_t)groupIndex << "  " << Mac32Address::ConvertFrom(std::get<0>(*listIt)).GetUInt() << " " <<  (uint32_t) sfSetting << " " << (uint32_t)powerSetting << " " << (uint32_t)std::get<2>(*listIt) << " " << std::get<1>(*listIt)<< " " << Simulator::Now().GetSeconds()<< std::endl;
 				//first 2 should be within reach of power control
 				if (sfSetting>5)
 				{

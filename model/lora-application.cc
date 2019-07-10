@@ -34,6 +34,9 @@
 #include "ns3/socket.h"
 #include "ns3/packet-socket.h"
 #include "ns3/packet-socket-address.h"
+#include <ns3/random-variable-stream.h>
+#include <ns3/double.h>
+#include <ns3/boolean.h>
 
 namespace ns3 {
 
@@ -62,6 +65,10 @@ namespace ns3 {
 						UintegerValue (0),
 						MakeUintegerAccessor (&LoRaApplication::m_port),
 						MakeUintegerChecker<uint8_t> ())
+				.AddAttribute ("RandomSend","Whether we should schedule it without randomness or with randomness",
+						BooleanValue (false),
+						MakeBooleanAccessor (&LoRaApplication::m_random),
+						MakeBooleanChecker ())
 				;
 			return tid;
 		}
@@ -90,6 +97,8 @@ namespace ns3 {
 		LoRaApplication::DoInitialize (void)
 		{
 			Application::DoInitialize ();
+			m_rand = CreateObject<UniformRandomVariable>();
+			m_rand->SetAttribute("Max",DoubleValue(m_interPacketTime.GetSeconds()));
 		}
 
 	void LoRaApplication::StartApplication ()
@@ -128,10 +137,18 @@ namespace ns3 {
 		// Create a sensor reading of some size ...
 		Ptr<Packet> packet = Create<Packet> (m_dataSize);
 		// ... and send it.
-		m_socket->Send (packet,0);
+		if (m_random)
+			Simulator::Schedule(Seconds(m_rand->GetValue()),&LoRaApplication::Send,this,packet);
+		else
+			m_socket->Send (packet,0);
 
 		// Schedule a new event
 		m_SenseEvent = Simulator::Schedule(m_interPacketTime,&LoRaApplication::Sense,this);
+	}
+
+	void LoRaApplication::Send (const Ptr<Packet> packet)
+	{
+		m_socket->Send (packet,0);
 	}
 
 } // namespace ns3

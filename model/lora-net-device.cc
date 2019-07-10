@@ -31,8 +31,6 @@
 #include "lora-mac-command.h"
 #include <ns3/link-check-req.h>
 #include "lora-net-device.h"
-#include "ns3/llc-snap-header.h"
-#include "ns3/aloha-noack-mac-header.h"
 #include <ns3/random-variable-stream.h>
 namespace ns3 {
 
@@ -763,7 +761,7 @@ uint32_t
 					m_state = IDLE;
 				}
 				// Get new message from the queue
-				if(m_currentPkt==0)
+				if(m_currentPkt==0 && GetFreeChannel()!=127)
 				{
 					NS_LOG_LOGIC("Checking new transmission" << m_queue->IsEmpty());
 					if (m_queue->IsEmpty () == false)

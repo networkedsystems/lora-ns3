@@ -91,7 +91,7 @@ RxParamSetupAns::Deserialize (Buffer::Iterator start)
 void
 RxParamSetupAns::Execute (Ptr<LoRaNetworkApplication> nd,Address address)
 {
-	std::cout << m_offsetAck << " " << m_drAck << " " << m_channelAck << std::endl;
+	//std::cout << m_offsetAck << " " << m_drAck << " " << m_channelAck << std::endl;
 }
 void RxParamSetupAns::SetOffsetAck (bool ack)
 {

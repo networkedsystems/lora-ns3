@@ -162,9 +162,12 @@ namespace ns3 {
 			{
 				m_receptionsPerChannel[i]*=0.5;
 			}
-			m_rssiValues[1]=169;
-			m_rssiValues[2]=176;
-			m_rssiValues[0]=m_rssiValues[1]-15;
+			//m_rssiValues[1]=169;
+			//m_rssiValues[2]=176;
+			//m_rssiValues[0]=m_rssiValues[1]-15;
+			m_rssiValues[1]=140;
+			m_rssiValues[2]=152;
+			m_rssiValues[0]=m_rssiValues[1]-10;
 			for(uint8_t i = 0; i<m_availableChannels;i++)
 			{
 					beaconHeader.AddChannel(m_rssiValues[(i)%m_availableChannels],0x3f);

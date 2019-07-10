@@ -101,7 +101,7 @@ DevStatusAns::Deserialize (Buffer::Iterator start)
 void
 DevStatusAns::Execute (Ptr<LoRaNetworkApplication> app,Address address)
 {
-	std::cout << (int32_t)m_margin << " " << (uint32_t)m_battery << std::endl;
+	//std::cout << (int32_t)m_margin << " " << (uint32_t)m_battery << std::endl;
 	//nd->GetSNR();
 	//Ptr<LoRaMacCommand> command = CreateObject<LinkCheckAns>(margin,count);
 	//nd->SetMacAnswer (command);

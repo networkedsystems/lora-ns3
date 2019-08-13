@@ -31,8 +31,6 @@
 #include "lora-mac-command.h"
 #include <ns3/link-check-req.h>
 #include "lora-net-device.h"
-#include "ns3/llc-snap-header.h"
-#include "ns3/aloha-noack-mac-header.h"
 #include <ns3/random-variable-stream.h>
 namespace ns3 {
 
@@ -86,11 +84,11 @@ namespace ns3 {
 						Mac32AddressValue (Mac32Address ("00:00:00:01")),
 						MakeMac32AddressAccessor (&LoRaNetDevice::m_address),
 						MakeMac32AddressChecker ())
-//			.AddAttribute ("Queue",
-//					"packets being transmitted get queued here",
-//					PointerValue (),
-//					MakePointerAccessor (&LoRaNetDevice::m_queue),
-//					MakePointerChecker<Queue<QueueItem>> ())
+  			.AddAttribute ("Reliable",
+  					"packets are transmitted reliably AKA the request an ACK",
+  					BooleanValue(false),
+  					MakeBooleanAccessor (&LoRaNetDevice::m_reliable),
+            MakeBooleanChecker ())
 				.AddAttribute ("Mtu", "The Maximum Transmission Unit",
 						UintegerValue (255),
 						MakeUintegerAccessor (&LoRaNetDevice::SetMtu,
@@ -171,6 +169,7 @@ namespace ns3 {
 			m_phyMacTxStartCallback = MakeNullCallback< bool, Ptr<Packet> > ();
 			m_rxCallback = MakeNullCallback <bool, Ptr<NetDevice>, Ptr<const Packet>, uint16_t, const Address& > ();
 			m_promiscRxCallback = MakeNullCallback <bool, Ptr<NetDevice>,Ptr<const Packet>, uint16_t, const Address&, const Address&, PacketType > ();
+			m_answers.erase (m_answers.begin(),m_answers.end());
 			NetDevice::DoDispose ();
 		}
 
@@ -420,14 +419,18 @@ uint32_t
 			// ignore all destination addresses, all packets are for base station anyway, but keep to be compatible with NetDevice
 			// also the address field is just this device. 
 			NS_LOG_FUNCTION (packet << src << dest << protocolNumber);
-			LoRaMacHeader header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP,1);
+			LoRaMacHeader header;
+			if (m_reliable)
+				header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP,1);
+			else
+				header = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP,1);
 			header.SetAddr (m_address);
 			header.SetNoAck();
 			header.SetPort (protocolNumber);
-			if (m_seqNum%10 == 4)
-			{
-				header.SetMacCommand(CreateObject <LinkCheckReq> ());
-			}
+			//if (m_seqNum%10 == 4)
+			//{
+			//	header.SetMacCommand(CreateObject <LinkCheckReq> ());
+			//}
 			packet->AddHeader (header);
 
 
@@ -524,7 +527,7 @@ uint32_t
 			m_phy->SetPower(power[powerIndex]);
 			m_phy->SetBandwidth(bandwidth[datarate]);
 			m_phy->SetSpreadingFactor(spreading[datarate]);
-			m_phy->ChangeState(LoRaPhy::State::TX);
+			m_phy->ChangeState(LoRaPhyState::LoRaTX);
 			// Start transmission
 			if (!m_phyMacTxStartCallback (packet->Copy()))
 			{
@@ -561,12 +564,17 @@ uint32_t
 		{
 			NS_LOG_FUNCTION((uint32_t)maxSetting);
 			NS_ASSERT (maxSetting < 0x0F);
+			bool change = false;
 			for (uint8_t i=0; i<16; i++)
 			{
-				datarate[i] = maxSetting;
-				maxDatarate[i] = maxSetting;
+				if (maxSetting <= maxDatarate[i])
+				{
+					change = true;
+					datarate[i] = maxSetting;
+				//maxDatarate[i] = maxSetting;
+				}
 			}
-			return true;
+			return change;
 		}
 	
 	bool
@@ -579,6 +587,14 @@ uint32_t
 			return true;
 		}
 	
+	bool
+		LoRaNetDevice::SetMinDataRate (uint8_t minSetting, uint8_t index)
+		{
+			NS_LOG_FUNCTION((uint32_t)minSetting << (uint32_t) index);
+			NS_ASSERT (minSetting < 0x0F);
+			minDatarate[index] = minSetting;
+			return true;
+		}
 	bool
 		LoRaNetDevice::SetMinDataRate (uint8_t minSetting)
 		{
@@ -645,7 +661,7 @@ uint32_t
 						m_state = RX1_PENDING;
 					}
 				}
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 			}
 		}
 
@@ -681,7 +697,7 @@ uint32_t
 				Simulator::ScheduleNow(&LoRaPhy::SetBandwidth, m_phy, bandwidthSetting);
 				Simulator::ScheduleNow(&LoRaPhy::SetChannelIndex, m_phy, frequency);
 				Simulator::ScheduleNow(&LoRaPhy::SetSpreadingFactor, m_phy, spreadingfactor);
-				Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhy::State::RX);
+				Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhyState::LoRaRX);
 				if (m_state == RX1_PENDING)
 					m_event = Simulator::Schedule(Seconds(0.03),&LoRaNetDevice::CheckReception, this);
 				else
@@ -708,7 +724,7 @@ uint32_t
 			NS_ASSERT (m_state == RX || m_state == RX1_PENDING);
 			if (m_state != RX )
 			{
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 				m_state = RX2_PENDING;
 			}
 		}
@@ -745,7 +761,7 @@ uint32_t
 					m_state = IDLE;
 				}
 				// Get new message from the queue
-				if(m_currentPkt==0)
+				if(m_currentPkt==0 && GetFreeChannel()!=127)
 				{
 					NS_LOG_LOGIC("Checking new transmission" << m_queue->IsEmpty());
 					if (m_queue->IsEmpty () == false)
@@ -806,7 +822,7 @@ uint32_t
 			if (m_state != RX)
 			{
 				m_state = RETRANSMISSION;
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 				if (m_ackCnt > ADR_ACK_LIMIT)
 				{
 					for (uint8_t i = 0; i<16;i++){
@@ -831,7 +847,7 @@ uint32_t
 		LoRaNetDevice::NotifyReceptionEndError ()
 		{
 			NS_LOG_FUNCTION (this);
-			m_phy->ChangeState(LoRaPhy::State::IDLE);
+			m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 			// if it is the second reception window, we have to retransmit
 			// otherwise we wait
 			if(Simulator::GetDelayLeft(m_event2) <= NanoSeconds(0))
@@ -866,7 +882,7 @@ uint32_t
 			LoRaMacHeader header;
 			packet->RemoveHeader (header);
 			NS_LOG_LOGIC ("packet : Gateway --> " << header.GetAddr () << " (here: " << m_address << ")");
-			m_phy->ChangeState(LoRaPhy::State::IDLE);
+			m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 
 			PacketType packetType;
 			if (header.GetAddr ().IsBroadcast ())

@@ -130,7 +130,7 @@ namespace ns3 {
 		LoRaRsNetDevice::DoPrepareReception (uint32_t bandwidthSetting, uint32_t frequency, uint32_t spreadingfactor)
 		{
 			NS_LOG_FUNCTION(this << bandwidthSetting << frequency << spreadingfactor);
-			std::cout << m_state << std::endl;
+			//std::cout << m_state << std::endl;
 			NS_ASSERT(m_state!= RETRANSMISSION);
 			NS_ASSERT(m_state!= TX);
 			// RECOVER STATE after BEACON transmission
@@ -151,7 +151,7 @@ namespace ns3 {
 					Simulator::ScheduleNow(&LoRaPhy::SetBandwidth, m_phy, bandwidthSetting);
 					Simulator::ScheduleNow(&LoRaPhy::SetChannelIndex, m_phy, frequency);
 					Simulator::ScheduleNow(&LoRaPhy::SetSpreadingFactor, m_phy, spreadingfactor);
-					Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhy::State::RX);
+					Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhyState::LoRaRX);
 					if (m_state == RX1_PENDING)
 						m_event = Simulator::Schedule(Seconds(0.03),&LoRaRsNetDevice::CheckReception, this);
 					else
@@ -174,9 +174,9 @@ namespace ns3 {
 			Simulator::ScheduleNow(&LoRaPhy::SetBandwidth, m_phy, 125000);
 			Simulator::ScheduleNow(&LoRaPhy::SetChannelIndex, m_phy, frequencies[(m_offset+minutes)%3]);
 			Simulator::ScheduleNow(&LoRaPhy::SetSpreadingFactor, m_phy, 9);
-			Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhy::State::RX);
+			Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhyState::LoRaRX);
 			m_beaconTimeout = Simulator::Schedule(Seconds(0.4),&LoRaRsNetDevice::BeaconTimeout, this);
-			//Simulator::Schedule(Seconds(0.4),&LoRaPhy::ChangeState,m_phy,LoRaPhy::State::IDLE);
+			//Simulator::Schedule(Seconds(0.4),&LoRaPhy::ChangeState,m_phy,LoRaPhyState::LoRaIDLE);
 			m_nextBeacon = Simulator::Schedule(m_interBeacon,&LoRaRsNetDevice::ReceiveBeacon,this);
 		}
 
@@ -187,7 +187,7 @@ namespace ns3 {
 			if (m_state!= RX)
 			{
 				m_state = IDLE;
-				Simulator::ScheduleNow(&LoRaPhy::ChangeState,m_phy,LoRaPhy::State::IDLE);
+				Simulator::ScheduleNow(&LoRaPhy::ChangeState,m_phy,LoRaPhyState::LoRaIDLE);
 				if(m_currentPkt!= 0 && Simulator::GetDelayLeft(m_event2) <= Seconds(0) && m_channelRssiValues.size ()!=0)
 				{
 					// Circular shift for channel hopping
@@ -206,7 +206,7 @@ namespace ns3 {
 			NS_LOG_FUNCTION(this);
 			if (m_state != RX && m_state!= BEACON)
 			{
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 				m_state = RX2_PENDING;
 			}
 		}
@@ -296,7 +296,7 @@ namespace ns3 {
 				}
 				if (m_state != BEACON)
 				{
-					m_phy->ChangeState(LoRaPhy::State::IDLE);
+					m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 					m_state = RETRANSMISSION;
 				}
 				Simulator::ScheduleNow(&LoRaNetDevice::TryAgain, this);
@@ -315,7 +315,7 @@ namespace ns3 {
 		LoRaRsNetDevice::NotifyReceptionEndError ()
 		{
 			NS_LOG_FUNCTION (this);
-			m_phy->ChangeState(LoRaPhy::State::IDLE);
+			m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 			// if it is the second reception window, we have to retransmit
 			// otherwise we wait
 			if(Simulator::GetDelayLeft(m_event2) <= NanoSeconds(0))
@@ -347,7 +347,7 @@ namespace ns3 {
 			LoRaMacHeader header;
 			packet->RemoveHeader (header);
 			NS_LOG_LOGIC ("packet : Gateway --> " << header.GetAddr () << " (here: " << m_address << ")");
-			m_phy->ChangeState(LoRaPhy::State::IDLE);
+			m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 
 			PacketType packetType;
 			if (header.GetAddr ().IsBroadcast ())

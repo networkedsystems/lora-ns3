@@ -93,7 +93,7 @@ void
 LinkCheckAns::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
 	// Do Nothing, probably, pass this to a higher layer, or use this to control the power.
-	std::cout << (uint32_t)m_margin << " " << (uint32_t)m_count << std::endl;
+	//std::cout << (uint32_t)m_margin << " " << (uint32_t)m_count << std::endl;
 }
 
 void LinkCheckAns::SetMargin (uint8_t margin)

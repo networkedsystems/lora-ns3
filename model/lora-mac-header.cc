@@ -171,7 +171,8 @@ bool
 LoRaMacHeader::NeedsAck (void) const
 {
 	NS_LOG_FUNCTION (this);
-	return (m_fctrlAdrAckReq || (m_fctrlFrmType == LORA_MAC_CONFIRMED_DATA_UP) || (m_fctrlFrmType == LORA_MAC_CONFIRMED_DATA_DOWN));
+//	return (m_fctrlAdrAckReq || (m_fctrlFrmType == LORA_MAC_CONFIRMED_DATA_UP) || (m_fctrlFrmType == LORA_MAC_CONFIRMED_DATA_DOWN));
+	return ((m_fctrlFrmType == LORA_MAC_CONFIRMED_DATA_UP) || (m_fctrlFrmType == LORA_MAC_CONFIRMED_DATA_DOWN));
 }
 
 bool

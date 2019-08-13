@@ -38,7 +38,7 @@ namespace ns3 {
  * \brief A LoRa radio energy model.
  * 
  * 3 states are defined for the radio: TX,RX and IDLE.
- * Inherit from LoRaPhy::State
+ * Inherit from LoRaPhyState
  * The different types of tansactirons that are defined are:
  *  1. TX: Transmitter is enabled.
  *  2. RX: Receiver is enabled.
@@ -90,7 +90,7 @@ public:
   /**
    * \returns Current state.
    */
-	LoRaPhy::State GetCurrentState (void) const;
+	LoRaPhyState GetCurrentState (void) const;
 
   /**
    * \brief Inherit from DeviceEnergyModel, not used
@@ -118,7 +118,7 @@ public:
   /**
    * \brief Change state of the LoRaRadioEnergyMode
    */
-  void ChangeLoRaState ( LoRaPhy::State newstate);
+  void ChangeLoRaState (LoRaPhyState oldState, LoRaPhyState newState);
 
 private:
   /**
@@ -139,7 +139,7 @@ private:
    * Sets current state. This function is private so that only the energy model
    * can change its own state.
    */
-  void SetLoRaRadioState (const LoRaPhy::State state);
+  void SetLoRaRadioState (const LoRaPhyState state);
 
 private:
   Ptr<EnergySource> m_source;
@@ -155,7 +155,7 @@ private:
   TracedCallback<std::string, std::string, bool, double, double, double> m_EnergyStateLogger;
 
   // State variables.
-	LoRaPhy::State m_currentState;  // current state the radio is in
+	LoRaPhyState m_currentState;  // current state the radio is in
   Time m_lastUpdateTime;                // time stamp of previous energy update
   double m_energyToDecrease;            // consumed energy of lastest LoRaRadioEnergyMode
   double m_remainingBatteryEnergy;      // remaining battery energy of the energy source attaching to the node

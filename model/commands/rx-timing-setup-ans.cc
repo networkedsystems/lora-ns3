@@ -77,7 +77,7 @@ RxTimingSetupAns::Deserialize (Buffer::Iterator start)
 void
 RxTimingSetupAns::Execute (Ptr<LoRaNetworkApplication> nd,Address address)
 {
-	std::cout << "Acked" << std::endl;
+	//std::cout << "Acked" << std::endl;
 }
 
 } //namespace ns3

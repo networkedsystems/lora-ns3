@@ -66,7 +66,7 @@ NewChannelReq::GetInstanceTypeId (void) const
 uint32_t
 NewChannelReq::GetSerializedSize (void) const
 {
-  return 5;
+  return 6;
 }
 
 
@@ -93,14 +93,14 @@ NewChannelReq::Deserialize (Buffer::Iterator start)
 	uint8_t drRange = start.ReadU8();
 	m_minDr = drRange&0x0F;
 	m_maxDr = (drRange >> 4)&0x0F;
-  return 5;
+  return 6;
 }
 
 void
 NewChannelReq::Execute (Ptr<LoRaNetDevice> nd,Address address)
 {
 	bool channel = nd->AddChannel (m_chIndex, m_freq);
-	bool dr = nd->SetMaxDataRate(m_maxDr,m_chIndex) && nd->SetMaxDataRate(m_minDr,m_chIndex);
+	bool dr = nd->SetMaxDataRate(m_maxDr,m_chIndex) && nd->SetMinDataRate(m_minDr,m_chIndex);
 	if (!(channel && dr))
 	{
 		nd->RemoveChannel (m_chIndex);

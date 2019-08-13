@@ -86,11 +86,23 @@ namespace ns3 {
 			*/
 		void SetGateway (uint32_t gatewayId);
 
+		uint8_t GetSpreadingFactor();
+		void SetSpreadingFactor(uint8_t sf);
+
+		uint32_t GetBandwidth();
+		void SetBandwidth(uint32_t bandwidth);
+
+		uint32_t GetFrequency();
+		void SetFrequency (uint32_t freq);
+
 		private:
 		/**
 		 * The rssi value with this packet
 		 */
 		double m_rssi;
+		uint8_t m_sf;
+		uint32_t m_bandwidth;
+		uint32_t m_frequency;
 
 		uint32_t m_gatewayId; //!< the id of the receiving gateway
 	};

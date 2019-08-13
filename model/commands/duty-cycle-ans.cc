@@ -78,7 +78,7 @@ DutyCycleAns::Deserialize (Buffer::Iterator start)
 void
 DutyCycleAns::Execute (Ptr<LoRaNetworkApplication> app,Address address)
 {
-	std::cout << "Acked" << std::endl;
+	//std::cout << "Acked" << std::endl;
 }
 
 } //namespace ns3

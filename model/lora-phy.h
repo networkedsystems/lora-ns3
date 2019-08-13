@@ -33,6 +33,7 @@
 #include <ns3/random-variable-stream.h>
 #include <ns3/callback.h>
 #include <ns3/traced-value.h>
+#include <ns3/traced-callback.h>
 namespace ns3 {
 
 class SpectrumChannel;
@@ -42,6 +43,24 @@ class SpectrumValue;
 class SpectrumModel;
 class NetDevice;
 struct SpectrumSignalParameters;
+
+
+/**
+* State of the transceiver
+*/
+
+enum LoRaPhyState
+{
+	LoRaTX,LoRaRX,LoRaIDLE
+};
+
+
+namespace TracedValueCallback
+{
+	typedef void (* LoRaPhyState) (LoRaPhyState oldValue, LoRaPhyState newValue);
+}
+
+
 
 /**
  * \ingroup lora
@@ -54,15 +73,7 @@ class LoRaPhy : public SpectrumPhy
 {
 
 public:
-
-	/**
- 	* State of the transceiver
- 	*/
-
-	enum State
-	{
-  	TX,RX,IDLE
-	};
+	
 
 
 	LoRaPhy ();
@@ -242,7 +253,7 @@ public:
    *
    * \params sf spreading factor
    */
-  void ChangeState (State state);
+  void ChangeState (LoRaPhyState state);
 
   /**
    * Get Transmit power spectral density for a given channel and power and the stored bandwidth and spreading
@@ -316,7 +327,7 @@ protected:
 private:
  
  EventId m_event; //!< When the receiving packet is being received
- TracedValue<State> m_state; //!< state of the transceiver
+ TracedValue<LoRaPhyState> m_state; //!< state of the transceiver
  double m_lastRssi; //!< rssi of last packet
  double m_lastSnr; //!< snr of last packet
   /**
@@ -341,5 +352,7 @@ private:
    */
   virtual void UpdateBer (void);
 };
+
+
 } // namespace ns3
 #endif /* LORA_PHY_H */

@@ -21,13 +21,14 @@
 #ifndef LORA_APPLICATION_H
 #define LORA_APPLICATION_H
 
-#include "ns3/event-id.h"
-#include "ns3/nstime.h"
-#include "ns3/object.h"
-#include "ns3/ptr.h"
-#include "ns3/node.h"
-#include "ns3/callback.h"
-#include "ns3/application.h"
+#include <ns3/event-id.h>
+#include <ns3/nstime.h>
+#include <ns3/object.h>
+#include <ns3/ptr.h>
+#include <ns3/node.h>
+#include <ns3/callback.h>
+#include <ns3/application.h>
+#include <ns3/random-variable-stream.h>
 
 namespace ns3 {
 
@@ -56,6 +57,7 @@ namespace ns3 {
 			 * This function is the function to schedule a sensing event. With every sensing event, we generate the packet.
 			 */
 			void Sense (void);
+			void Send (const Ptr<Packet> packet);
 
 
 			EventId m_SenseEvent;     //!< The event that will fire at m_stopTime to end the application
@@ -63,6 +65,8 @@ namespace ns3 {
 			uint8_t m_dataSize;		//!< The size of an empty message
 			uint8_t m_port;			//!< The port to use (this is equal to the port MAC field in LoRa)
 			Time m_interPacketTime;	//!< The time between two packets
+			Ptr<RandomVariableStream> m_rand;
+			bool m_random;
 		protected:
 			virtual void DoDispose (void);
 			virtual void DoInitialize (void);

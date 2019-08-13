@@ -169,7 +169,7 @@ namespace ns3 {
 					Simulator::ScheduleNow(&LoRaNetwork::m_netRxTrace,this,packet);
 					m_packetToTransmit[header.GetAddr()] = 0;
 				}
-				if ((header.IsAdrAck () && header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP) || header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP)
+				if ((header.IsAdrAck () || header.NeedsAck()) && (header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_UP || header.GetType() == LoRaMacHeader::LoRaMacType::LORA_MAC_CONFIRMED_DATA_UP))
 				{
 					LoRaMacHeader ackHeader;
 					ackHeader = LoRaMacHeader(LoRaMacHeader::LoRaMacType::LORA_MAC_UNCONFIRMED_DATA_DOWN,header.GetFrmCounter());
@@ -264,6 +264,10 @@ namespace ns3 {
 			if (m_packetToTransmit [mac.GetAddr()]==0)
 			{
 				NS_LOG_LOGIC("Queue for this device was empty.");
+				// Add trailer such that GW knows what to do with it.
+				DeviceRxSettings theseSettings = m_settings[mac.GetAddr()];
+				LoRaNetworkTrailer trailer = LoRaNetworkTrailer(theseSettings.delay,theseSettings.dr1Offset,theseSettings.dr2,theseSettings.frequency);
+				copy->AddTrailer (trailer);
 				m_packetToTransmit [mac.GetAddr()] = copy;
 			}
 			else

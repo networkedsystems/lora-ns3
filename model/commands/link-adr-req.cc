@@ -105,7 +105,7 @@ LinkAdrReq::Execute (Ptr<LoRaNetDevice> netDevice,Address address)
 	bool power = netDevice->SetMaxPower (m_power);
 	bool channelmask = netDevice->SetChannelMask (m_channelMask);
 	netDevice->SetNbRep(m_nbRep);
-	LinkAdrAns* command = new LinkAdrAns ( datarate, power, channelmask);
+	Ptr<LinkAdrAns> command = Create<LinkAdrAns>( datarate, power, channelmask);
 	netDevice->SetMacAnswer (command);
 }
 

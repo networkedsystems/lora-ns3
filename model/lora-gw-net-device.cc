@@ -166,10 +166,10 @@ namespace ns3 {
 			NS_LOG_FUNCTION (this);
 			if (packet != 0)
 			{
-				NS_LOG_DEBUG(GetPhy ()->GetReceptions() << " " << GetPhy ()->IsTransmitting());
+				NS_LOG_DEBUG(GetPhy ()->GetReceptions(frequency) << " " << GetPhy ()->IsTransmitting());
 				LoRaNetworkTrailer trailer;
 				packet->RemoveTrailer(trailer);
-				if (this->GetPhy ()->GetReceptions()>0 || this->GetPhy ()->IsTransmitting()||true)
+				if (this->GetPhy ()->GetReceptions(frequency)>0 || this->GetPhy ()->IsTransmitting()||true)
 				{
 					Simulator::Schedule(Seconds(trailer.GetDelay()),&LoRaGwNetDevice::StartTransmission,this,packet->Copy (),trailer.GetRx2Freq(),trailer.GetRx2Dr(),powerIndex);
 				}
@@ -245,6 +245,9 @@ namespace ns3 {
 				GwTrailer trail;
 				trail.SetRssi (rssi);
 				trail.SetGateway (this->GetNode ()->GetId ());
+				trail.SetFrequency(frequency);
+				trail.SetSpreadingFactor(spreading);
+				trail.SetBandwidth(bandwidth);
 				Ptr<Packet> copy = packet->Copy();
 				copy->AddTrailer(trail);
 				m_rxCallback (this, copy, header.GetPort (), header.GetAddr ());

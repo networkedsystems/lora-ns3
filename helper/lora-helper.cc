@@ -29,8 +29,10 @@
 #include <ns3/isotropic-antenna-model.h>
 #include <ns3/drop-tail-queue.h>
 #include <ns3/log.h>
+#include <ns3/double.h>
 #include "ns3/names.h"
 #include <ns3/random-variable-stream.h>
+#include <ns3/pointer.h>
 
 namespace ns3 {
 
@@ -169,7 +171,7 @@ LoRaHelper::Install (NodeContainer c)
 		Ptr<Node> nodeI = *i;
 		Ptr<LoRaNetDevice> anandi = CreateObject<LoRaNetDevice> ();
 		devices.Add(anandi);
-		Ptr<LoRaPhy> sfp = Create<LoRaPhy> ();
+		Ptr<LoRaPhy> sfp = CreateObject<LoRaPhy> ();
 		if (m_spectrumModel == 0)
 			m_spectrumModel = sfp->GetRxSpectrumModel();
 		else
@@ -208,7 +210,7 @@ LoRaHelper::InstallRs (NodeContainer c)
 		Ptr<Node> nodeI = *i;
 		Ptr<LoRaRsNetDevice> anandi = CreateObject<LoRaRsNetDevice> ();
 		devices.Add(anandi);
-		Ptr<LoRaPhy> sfp = Create<LoRaPhy> ();
+		Ptr<LoRaPhy> sfp = CreateObject<LoRaPhy> ();
 		if (m_spectrumModel == 0)
 			m_spectrumModel = sfp->GetRxSpectrumModel();
 		else
@@ -246,7 +248,7 @@ LoRaHelper::InstallGateways (NodeContainer c)
   {
   	Ptr<Node> nodeJ = *i;
   	Ptr<LoRaGwNetDevice> anand = CreateObject<LoRaGwNetDevice> ();
-  	Ptr<LoRaGwPhy> sfp = Create<LoRaGwPhy> ();
+  	Ptr<LoRaGwPhy> sfp = CreateObject<LoRaGwPhy> ();
 		if (m_spectrumModel == 0)
 			m_spectrumModel = sfp->GetRxSpectrumModel();
 		else
@@ -284,7 +286,7 @@ LoRaHelper::InstallRsGateways (NodeContainer c)
   {
   	Ptr<Node> nodeJ = *i;
   	Ptr<LoRaRsGwNetDevice> anand = CreateObject<LoRaRsGwNetDevice> ();
-  	Ptr<LoRaGwPhy> sfp = Create<LoRaGwPhy> ();
+  	Ptr<LoRaGwPhy> sfp = CreateObject<LoRaGwPhy> ();
 		if (m_spectrumModel == 0)
 			m_spectrumModel = sfp->GetRxSpectrumModel();
 		else
@@ -538,12 +540,12 @@ LoRaHelper::FinishGateways (NodeContainer nodes, NetDeviceContainer devices, con
 }
 
 ApplicationContainer 
-LoRaHelper::GenerateTraffic(Ptr<RandomVariableStream> var, NodeContainer nodes, int packet_size, double start, double duration, double interval)
+LoRaHelper::GenerateTraffic(Ptr<RandomVariableStream> var, NodeContainer nodes, int packet_size, double start, double duration, double interval, bool random)
 {
   ApplicationContainer apps;
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); i++)
     {
-		apps.Add(GenerateTraffic (var, *i, packet_size,start,duration,interval));
+		apps.Add(GenerateTraffic (var, *i, packet_size,start,duration,interval,random));
 	}
   return apps;
 }
@@ -582,13 +584,14 @@ LoRaHelper::FinishGateway (Ptr<Node> node, Ptr<NetDevice> device, const Address 
 }
 
 Ptr<Application>
-LoRaHelper::GenerateTraffic(Ptr<RandomVariableStream> var, Ptr<Node> node, int packet_size, double start, double duration, double interval)
+LoRaHelper::GenerateTraffic(Ptr<RandomVariableStream> var, Ptr<Node> node, int packet_size, double start, double duration, double interval, bool random)
 {
   Ptr<LoRaApplication> app = CreateObject<LoRaApplication>();
   app->SetStartTime (Seconds (start+var->GetValue ()));
   app->SetStopTime (Seconds (start+duration));
   app->SetAttribute ("InterPacketTime",TimeValue( Seconds (interval)));
   app->SetAttribute ("DataSize",UintegerValue (packet_size));
+	app->SetAttribute ("RandomSend",BooleanValue(random));
 	node->AddApplication (app);
   return app;
 }
@@ -616,6 +619,95 @@ LoRaHelper::InstallNetworkApplication (std::string type,
   factory.Set (n7, v7);
   m_netApp.push_back(factory);
 }
-	
+
+NodeContainer
+LoRaHelper::AddInterference (MobilityHelper helper)
+{
+	NodeContainer container;
+	double lambdas[] = {15,12,45};
+	uint32_t fcs[] = {868100000,868300000,868500000};
+	// Create one noise file per LoRa Channel
+	// this is based on measurements done in Leuven, Belgium
+	for (uint32_t j = 0; j<3; j+= 1)
+	{
+		uint32_t i = fcs[j];
+		Ptr<RandomVariableStream> fc = CreateObject<NormalRandomVariable>();
+		fc->SetAttribute ("Mean",DoubleValue(i));
+		fc->SetAttribute ("Variance",DoubleValue(200));
+		Ptr<RandomVariableStream> bandwidth = CreateObject<RandomMixture>();
+		Ptr<RandomVariableStream> bandwidth1 = CreateObject<NormalRandomVariable>();
+		bandwidth1->SetAttribute ("Mean",DoubleValue(18000));
+		bandwidth1->SetAttribute ("Variance",DoubleValue(3e8));
+		Ptr<RandomVariableStream> bandwidth2 = CreateObject<NormalRandomVariable>();
+		bandwidth2->SetAttribute ("Mean",DoubleValue(115000));
+		bandwidth2->SetAttribute ("Variance",DoubleValue(1e8));
+		DynamicCast<RandomMixture>(bandwidth)->AddNewDistribution(1,bandwidth1);
+		DynamicCast<RandomMixture>(bandwidth)->AddNewDistribution(10,bandwidth2);
+		Ptr<RandomMixture> length = CreateObject<RandomMixture>();
+		Ptr<RandomVariableStream> length1 = CreateObject<NormalRandomVariable>();//23
+		length1->SetAttribute ("Mean",DoubleValue(0.05));
+		length1->SetAttribute ("Variance",DoubleValue(8e-7));
+		Ptr<RandomVariableStream> length2 = CreateObject<NormalRandomVariable>();//31
+		length2->SetAttribute ("Mean",DoubleValue(0.01));
+		length2->SetAttribute ("Variance",DoubleValue(5e-7));
+		Ptr<RandomVariableStream> length3 = CreateObject<NormalRandomVariable>();//15
+		length3->SetAttribute ("Mean",DoubleValue(0.015));
+		length3->SetAttribute ("Variance",DoubleValue(8e-7));
+		Ptr<RandomVariableStream> length4 = CreateObject<NormalRandomVariable>();//5
+		length4->SetAttribute ("Mean",DoubleValue(0.02));
+		length4->SetAttribute ("Variance",DoubleValue(11e-7));
+		length->AddNewDistribution(23,length1);
+		length->AddNewDistribution(31,length2);
+		length->AddNewDistribution(15,length3);
+		length->AddNewDistribution(5,length4);
+		
+		for (uint32_t k = 0; k<lambdas[j];k++)
+		{
+			Ptr<Node> node = CreateObject<Node>();
+			// create Noise model
+			Ptr<NoiseIsm> noise = CreateObject<NoiseIsm>();
+			noise->SetChannel (m_channel);
+			Ptr<RandomVariableStream> fc2 = CreateObject<ConstantRandomVariable>();
+			fc2->SetAttribute("Constant",DoubleValue(fc->GetValue()));
+			noise->SetAttribute("CenterFrequency",PointerValue(fc));
+			Ptr<RandomVariableStream> bw2 = CreateObject<ConstantRandomVariable>();
+			bw2->SetAttribute("Constant",DoubleValue(bandwidth->GetValue()));
+			noise->SetAttribute("Bandwidth",PointerValue(bw2));
+			Ptr<RandomVariableStream> length2 = CreateObject<ConstantRandomVariable>();
+			length2->SetAttribute("Constant",DoubleValue(length->GetValue()));
+			noise->SetAttribute("MessageLength",PointerValue(DynamicCast<RandomVariableStream>(length2)));
+			Ptr<RandomVariableStream> time = CreateObject<ExponentialRandomVariable> ();
+			time->SetAttribute("Mean",DoubleValue(60));
+			noise->SetAttribute("StartTime",PointerValue(time));
+			Simulator::Schedule(Seconds(12*60*60+43200),&NoiseIsm::StartNoise,noise);
+			node->AggregateObject(noise);
+			container.Add(node);
+		}
+	}
+	// and now the "reliable" downlink channel
+	Ptr<Node> node = CreateObject<Node>();
+	// create Noise model
+	Ptr<NoiseIsm> noise = CreateObject<NoiseIsm>();
+	noise->SetChannel (m_channel);
+	Ptr<RandomVariableStream> fc = CreateObject<UniformRandomVariable>();
+	fc->SetAttribute ("Min",DoubleValue(869475000));
+	fc->SetAttribute ("Max",DoubleValue(869600000));
+	noise->SetAttribute("CenterFrequency",PointerValue(fc));
+	Ptr<RandomVariableStream> bandwidth = CreateObject<ExponentialRandomVariable>();
+	bandwidth->SetAttribute ("Mean",DoubleValue(9300));
+	noise->SetAttribute("Bandwidth",PointerValue(bandwidth));
+	Ptr<RandomVariableStream> length = CreateObject<ExponentialRandomVariable>();//23
+	length->SetAttribute ("Mean",DoubleValue(0.001));
+	noise->SetAttribute("MessageLength",PointerValue(length));
+	Ptr<RandomVariableStream> time = CreateObject<ExponentialRandomVariable> ();
+	time->SetAttribute("Mean",DoubleValue(18));
+	noise->SetAttribute("StartTime",PointerValue(time));
+	Simulator::Schedule(Seconds(12*60*60+43200),&NoiseIsm::StartNoise,noise);
+	node->AggregateObject(noise);
+	container.Add(node);
+	helper.Install (container);
+	return container;
+}
+
 } // namespace ns3
 

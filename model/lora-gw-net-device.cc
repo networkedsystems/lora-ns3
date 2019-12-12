@@ -166,10 +166,10 @@ namespace ns3 {
 			NS_LOG_FUNCTION (this);
 			if (packet != 0)
 			{
-				NS_LOG_DEBUG(GetPhy ()->GetReceptions() << " " << GetPhy ()->IsTransmitting());
+				NS_LOG_DEBUG(GetPhy ()->GetReceptions(frequency) << " " << GetPhy ()->IsTransmitting());
 				LoRaNetworkTrailer trailer;
 				packet->RemoveTrailer(trailer);
-				if (this->GetPhy ()->GetReceptions()>0 || this->GetPhy ()->IsTransmitting()||true)
+				if (this->GetPhy ()->GetReceptions(frequency)>0 || this->GetPhy ()->IsTransmitting()||true)
 				{
 					Simulator::Schedule(Seconds(trailer.GetDelay()),&LoRaGwNetDevice::StartTransmission,this,packet->Copy (),trailer.GetRx2Freq(),trailer.GetRx2Dr(),powerIndex);
 				}

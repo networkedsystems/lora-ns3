@@ -209,6 +209,20 @@ namespace ns3 {
 			return temp;
 		}
 
+	uint32_t 
+		LoRaGwPhy::GetReceptions(uint32_t freq)
+		{
+			uint8_t temp = 0;
+			for (auto &i : m_params)
+			{
+				if(i->GetBer()==0 && i->GetChannel() == freq)
+				{
+					temp++;
+				}
+			}
+			return temp;
+		}
+
 	void 
 		LoRaGwPhy::EndRx (Ptr<LoRaSpectrumSignalParameters> params)
 		{

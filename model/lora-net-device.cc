@@ -527,7 +527,7 @@ uint32_t
 			m_phy->SetPower(power[powerIndex]);
 			m_phy->SetBandwidth(bandwidth[datarate]);
 			m_phy->SetSpreadingFactor(spreading[datarate]);
-			m_phy->ChangeState(LoRaPhy::State::TX);
+			m_phy->ChangeState(LoRaPhyState::LoRaTX);
 			// Start transmission
 			if (!m_phyMacTxStartCallback (packet->Copy()))
 			{
@@ -661,7 +661,7 @@ uint32_t
 						m_state = RX1_PENDING;
 					}
 				}
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 			}
 		}
 
@@ -697,7 +697,7 @@ uint32_t
 				Simulator::ScheduleNow(&LoRaPhy::SetBandwidth, m_phy, bandwidthSetting);
 				Simulator::ScheduleNow(&LoRaPhy::SetChannelIndex, m_phy, frequency);
 				Simulator::ScheduleNow(&LoRaPhy::SetSpreadingFactor, m_phy, spreadingfactor);
-				Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhy::State::RX);
+				Simulator::ScheduleNow(&LoRaPhy::ChangeState, m_phy, LoRaPhyState::LoRaRX);
 				if (m_state == RX1_PENDING)
 					m_event = Simulator::Schedule(Seconds(0.03),&LoRaNetDevice::CheckReception, this);
 				else
@@ -724,7 +724,7 @@ uint32_t
 			NS_ASSERT (m_state == RX || m_state == RX1_PENDING);
 			if (m_state != RX )
 			{
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 				m_state = RX2_PENDING;
 			}
 		}
@@ -822,7 +822,7 @@ uint32_t
 			if (m_state != RX)
 			{
 				m_state = RETRANSMISSION;
-				m_phy->ChangeState(LoRaPhy::State::IDLE);
+				m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 				if (m_ackCnt > ADR_ACK_LIMIT)
 				{
 					for (uint8_t i = 0; i<16;i++){
@@ -847,7 +847,7 @@ uint32_t
 		LoRaNetDevice::NotifyReceptionEndError ()
 		{
 			NS_LOG_FUNCTION (this);
-			m_phy->ChangeState(LoRaPhy::State::IDLE);
+			m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 			// if it is the second reception window, we have to retransmit
 			// otherwise we wait
 			if(Simulator::GetDelayLeft(m_event2) <= NanoSeconds(0))
@@ -882,7 +882,7 @@ uint32_t
 			LoRaMacHeader header;
 			packet->RemoveHeader (header);
 			NS_LOG_LOGIC ("packet : Gateway --> " << header.GetAddr () << " (here: " << m_address << ")");
-			m_phy->ChangeState(LoRaPhy::State::IDLE);
+			m_phy->ChangeState(LoRaPhyState::LoRaIDLE);
 
 			PacketType packetType;
 			if (header.GetAddr ().IsBroadcast ())

@@ -47,11 +47,12 @@ LoRaPhy::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LoRaPhy")
     .SetParent<SpectrumPhy> ()
+		.SetGroupName("LoRa")
     .AddConstructor<LoRaPhy> ()
-				.AddTraceSource ("StateValue",
+		.AddTraceSource ("StateValue",
 						"The state of the transceiver",
 						MakeTraceSourceAccessor (&LoRaPhy::m_state),
-						"ns3::TracedValueCallback::State")
+						"ns3::TracedValueCallback::LoRaPhyState")
   ;
   return tid;
 }
@@ -59,7 +60,7 @@ LoRaPhy::GetTypeId (void)
 LoRaPhy::LoRaPhy ()
 {
   NS_LOG_FUNCTION (this);
-  m_state = IDLE;
+  m_state = LoRaIDLE;
   m_k = 1.38e-23;
   m_temperature = 298;
   m_bandwidth = 125000;
@@ -100,10 +101,10 @@ LoRaPhy::~LoRaPhy ()
 }
 
 void
-LoRaPhy::ChangeState (State state)
+LoRaPhy::ChangeState (LoRaPhyState state)
 {
   NS_LOG_FUNCTION (this << state);
-	if (state == IDLE)
+	if (state == LoRaIDLE)
 	{
 		Simulator::Remove(m_event);
 		m_params = 0;
@@ -343,7 +344,7 @@ LoRaPhy::StartTx (Ptr<Packet> packet)
 {
 	NS_LOG_FUNCTION (this);
 	Ptr<Packet> copy = packet->Copy();
-	if (m_state == TX)
+	if (m_state == LoRaTX)
 	{
 		//Add PHY header to packet
 		LoRaPhyHeader lh;
@@ -371,7 +372,7 @@ LoRaPhy::StartTx (Ptr<Packet> packet)
 LoRaPhy::EndTx (Ptr<Packet> packet)
 {
 	NS_LOG_FUNCTION (this);
-	m_state = IDLE;
+	m_state = LoRaIDLE;
 	m_transmission = false;
 	LoRaPhyHeader lh;
 	packet->RemoveHeader(lh);
@@ -426,12 +427,12 @@ LoRaPhy::StartRx (Ptr<SpectrumSignalParameters> params)
 				m_ReceptionError();
 				m_params = 0;
 				error ++;
-				m_state = IDLE;
+				m_state = LoRaIDLE;
 			}
 		}
 		//if the settings of the transceiver are ok, then continue
-		NS_LOG_DEBUG((uint32_t)error << RX << m_state << m_channelIndex << channel << m_bandwidth << sfParams->GetBandwidth() << (uint32_t)m_spreadingfactor  << sfParams->GetSpreading());
-		if (error ==0 && m_state == RX && m_channelIndex == channel && m_bandwidth == sfParams->GetBandwidth() && m_spreadingfactor == sfParams->GetSpreading())
+		NS_LOG_DEBUG((uint32_t)error << LoRaRX << m_state << m_channelIndex << channel << m_bandwidth << sfParams->GetBandwidth() << (uint32_t)m_spreadingfactor  << sfParams->GetSpreading());
+		if (error ==0 && m_state == LoRaRX && m_channelIndex == channel && m_bandwidth == sfParams->GetBandwidth() && m_spreadingfactor == sfParams->GetSpreading())
 		{
 			if (m_params==0)
 			{
@@ -454,7 +455,7 @@ LoRaPhy::SendMac ()
 {
 	NS_LOG_FUNCTION (this);
 	// check if receiving and if there is a packet
-	if(m_state==RX && m_params!=0 && m_bitErrors == 0){
+	if(m_state==LoRaRX && m_params!=0 && m_bitErrors == 0){
 		// copy the packet to make sure nothing changes
 		Ptr<Packet> packet = m_params->packet->Copy();
 		// remove header
@@ -514,7 +515,7 @@ LoRaPhy::EndRx (Ptr<LoRaSpectrumSignalParameters> params)
 		m_ReceptionError();
 	}
 	// turn of receiver
-	m_state = IDLE;
+	m_state = LoRaIDLE;
 }
 
 	void 

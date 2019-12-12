@@ -206,14 +206,16 @@ NoiseIsm::SendNoise ()
    txParams->psd = CreateTxPowerSpectralDensity();
    txParams->txAntenna = m_antenna;
    m_channel->StartTx (txParams);
-   Simulator::Schedule(Seconds(std::max(0.0,m_time->GetValue())),&NoiseIsm::SendNoise,this);
+   Time time = Seconds(std::max(0.0,m_time->GetValue()));
+   Simulator::Schedule(time,&NoiseIsm::SendNoise,this);
 }
 
 void 
 NoiseIsm::StartNoise (void)
 {
 	NS_LOG_FUNCTION(this);
-   Simulator::Schedule(Seconds(std::max(0.0,m_time->GetValue())),&NoiseIsm::SendNoise,this);
+	Time time = Seconds(std::max(0.0,m_time->GetValue()));
+  Simulator::Schedule(time ,&NoiseIsm::SendNoise,this);
 }
 
 } // namespace

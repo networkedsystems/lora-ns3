@@ -62,6 +62,7 @@ namespace ns3 {
 			 * \return a Ptr to the associated NetDevice instance
 			 */
 		uint32_t GetReceptions ();
+		uint32_t GetReceptions(uint32_t freq);
 		/**
 		 * Notify the SpectrumPhy instance of an incoming signal
 		 *

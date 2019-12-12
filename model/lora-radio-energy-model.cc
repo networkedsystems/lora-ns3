@@ -76,7 +76,7 @@ LoRaRadioEnergyModel::LoRaRadioEnergyModel ()
   m_lastUpdateTime = Seconds (0.0);
   //m_energyDepletionCallback.Nullify ();
   m_source = NULL;
-  m_currentState = LoRaPhy::State::IDLE;
+  m_currentState = LoRaPhyState::LoRaIDLE;
   m_sourceEnergyUnlimited = 0;
   m_remainingBatteryEnergy = 0;
   m_sourcedepleted = 0;
@@ -146,7 +146,7 @@ LoRaRadioEnergyModel::SetRxCurrentA (double rxCurrentA)
   m_RxCurrentA = rxCurrentA;
 }
 
-LoRaPhy::State
+LoRaPhyState
 LoRaRadioEnergyModel::GetCurrentState (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -166,10 +166,9 @@ LoRaRadioEnergyModel::HandleEnergyChanged (){
 }
 
 void
-LoRaRadioEnergyModel::ChangeLoRaState (LoRaPhy::State newstate)
+LoRaRadioEnergyModel::ChangeLoRaState (LoRaPhyState oldState, LoRaPhyState newState)
 {
-  NS_LOG_FUNCTION (this << newstate);
-
+  NS_LOG_FUNCTION (this << oldState << newState);
   Time duration = Simulator::Now () - m_lastUpdateTime;
   NS_ASSERT (duration.GetNanoSeconds () >= 0); // check if duration is valid
 
@@ -179,13 +178,13 @@ LoRaRadioEnergyModel::ChangeLoRaState (LoRaPhy::State newstate)
 
       switch (m_currentState)
         {
-					case LoRaPhy::State::IDLE:
+					case LoRaPhyState::LoRaIDLE:
           m_energyToDecrease = duration.GetSeconds () * m_IdleCurrentA * supplyVoltage;
           break;
-        case LoRaPhy::State::TX:
+        case LoRaPhyState::LoRaTX:
           m_energyToDecrease = duration.GetSeconds () * m_TxCurrentA * supplyVoltage;
           break;
-        case LoRaPhy::State::RX:
+        case LoRaPhyState::LoRaRX:
           m_energyToDecrease = duration.GetSeconds () * m_RxCurrentA * supplyVoltage;
           break;
 				default:
@@ -203,7 +202,7 @@ LoRaRadioEnergyModel::ChangeLoRaState (LoRaPhy::State newstate)
 
   if (!m_sourcedepleted)
     {
-      SetLoRaRadioState (newstate);
+      SetLoRaRadioState (newState);
       NS_LOG_DEBUG ("LoRaRadioEnergyModel:Total energy consumption is " <<
                     m_totalEnergyConsumption << "J");
     }
@@ -232,11 +231,11 @@ LoRaRadioEnergyModel::DoGetCurrentA (void) const
   NS_LOG_FUNCTION (this);
   switch (m_currentState)
     {
-    case LoRaPhy::State::IDLE:
+    case LoRaPhyState::LoRaIDLE:
       return m_IdleCurrentA;
-    case LoRaPhy::State::TX:
+    case LoRaPhyState::LoRaTX:
       return m_TxCurrentA;
-    case LoRaPhy::State::RX:
+    case LoRaPhyState::LoRaRX:
       return m_RxCurrentA;
     default:
       NS_FATAL_ERROR ("LoRaRadioEnergyModel:Undefined radio state:" << m_currentState);
@@ -245,20 +244,20 @@ LoRaRadioEnergyModel::DoGetCurrentA (void) const
 
 
 void
-LoRaRadioEnergyModel::SetLoRaRadioState (const LoRaPhy::State state)
+LoRaRadioEnergyModel::SetLoRaRadioState (const LoRaPhyState state)
 {
   NS_LOG_FUNCTION (this << state);
 
   std::string preStateName;
   switch (m_currentState)
     {
-		case LoRaPhy::State::IDLE:
+		case LoRaPhyState::LoRaIDLE:
       preStateName = "IDLE";
       break;
-    case LoRaPhy::State::TX:
+    case LoRaPhyState::LoRaTX:
       preStateName = "TX";
       break;
-		case LoRaPhy::State::RX: 
+		case LoRaPhyState::LoRaRX: 
       preStateName = "RX";
       break;
   default:
@@ -269,13 +268,13 @@ LoRaRadioEnergyModel::SetLoRaRadioState (const LoRaPhy::State state)
   std::string curStateName;
   switch (state)
     {
-    case LoRaPhy::State::IDLE:
+    case LoRaPhyState::LoRaIDLE:
       curStateName = "IDLE";
       break;
-    case LoRaPhy::State::RX:
+    case LoRaPhyState::LoRaRX:
       curStateName = "RX";
       break;
-    case LoRaPhy::State::TX:
+    case LoRaPhyState::LoRaTX:
       curStateName = "TX";
       break;
   default:

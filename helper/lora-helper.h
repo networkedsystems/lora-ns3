@@ -22,6 +22,7 @@
 #define LORA_HELPER_H
 
 #include <ns3/node-container.h>
+#include <ns3/mobility-helper.h>
 #include <ns3/application-container.h>
 #include <ns3/lora-phy.h>
 #include <ns3/trace-helper.h>
@@ -60,8 +61,8 @@ public:
 
 	Ptr<LoRaNetwork> InstallBackend (Ptr<Node> node, NetDeviceContainer devices);
 	
-	ApplicationContainer GenerateTraffic(Ptr <RandomVariableStream> var, NodeContainer nodes, int packet_size, double start, double duration, double interval);
-	Ptr<Application> GenerateTraffic(Ptr <RandomVariableStream> var, Ptr<Node> node, int packet_size, double start, double duration, double interval);
+	ApplicationContainer GenerateTraffic(Ptr <RandomVariableStream> var, NodeContainer nodes, int packet_size, double start, double duration, double interval,bool random);
+	Ptr<Application> GenerateTraffic(Ptr <RandomVariableStream> var, Ptr<Node> node, int packet_size, double start, double duration, double interval, bool random);
 
 
 	ApplicationContainer FinishGateways (NodeContainer nodes, NetDeviceContainer devices, const Address & address);
@@ -191,6 +192,14 @@ public:
                    std::string n5 = "", const AttributeValue &v5 = EmptyAttributeValue (),
                    std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
                    std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue ());
+
+	/**
+		* AddInterference adds interference given measurements in Belgium.
+		* This interference is now only targeting the 3 default bands and the default downlink band. 
+		* 
+		* \param node a moving node to install the noise on. This node could also be static.
+		*/
+	NodeContainer AddInterference (MobilityHelper helper);
 
 private:
 	// Disable implicit constructors

@@ -28,7 +28,9 @@ def build(bld):
 	  'model/lora-network-application.cc',
 	  'model/lora-power-application.cc',
 	  'model/lora-no-power-application.cc',
+    'model/lora-sf-controller-application.cc',
 	  'model/lora-test-application.cc',
+	  'model/sf-mab.cc',
 	  'model/commands/link-check-req.cc',
 	  'model/commands/link-adr-ans.cc',
 	  'model/commands/dev-status-ans.cc',
@@ -44,6 +46,8 @@ def build(bld):
 	  'model/commands/new-channel-req.cc',
 	  'model/commands/rx-timing-setup-req.cc',
 	  'model/gw-trailer.cc',
+		'model/noise-ism.cc',
+	  'model/random-mixture.cc',
 	  'model/mac32-address.cc'
 		]
 
@@ -79,7 +83,9 @@ def build(bld):
     'model/lora-network-application.h',
     'model/lora-power-application.h',
     'model/lora-no-power-application.h',
+    'model/lora-sf-controller-application.h',
     'model/lora-test-application.h',
+	  'model/sf-mab.h',
     'model/commands/link-check-req.h',
     'model/commands/link-adr-ans.h',
     'model/commands/dev-status-ans.h',
@@ -95,6 +101,8 @@ def build(bld):
     'model/commands/new-channel-req.h',
     'model/commands/rx-timing-setup-req.h',
     'model/gw-trailer.h',
+ 		'model/noise-ism.h',
+	  'model/random-mixture.h',
 	  'model/mac32-address.h'
 		]
 

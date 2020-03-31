@@ -243,7 +243,7 @@ mainBody ()
 
 	// Let the nodes generate data
 	std::cout << " Generate data from the nodes in the LoRa network" << std::endl;
-	ApplicationContainer apps = lorahelper.GenerateTraffic (randT, loraDeviceNodes, pktsize, 0, duration, 120);
+	ApplicationContainer apps = lorahelper.GenerateTraffic (randT, loraDeviceNodes, pktsize, 0, duration, 120, false);
 
 	// hookup functions to the netdevices of each node to measure the performance
 	for (uint32_t i = 0; i< loraNetDevices.GetN(); i++)

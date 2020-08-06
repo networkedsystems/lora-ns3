@@ -75,7 +75,7 @@ double length = 1000;			//!< Square city with length as distance
 double iterationCount = 5;			//!< Square city with length as distance
 int pktsize = 51;              //!< size of packets, in bytes
 int duration = 24*60*60;	//!< Duration of the simulation
-int measurementStart = 0;	//!< Start of the measured simulation (gives time to settle) 
+int measurementStart = 0;	//!< Start of the measured simulation (gives time to settle)
 double interval = 120;        // interval between packets, minutes
 bool verbose = false;          // enable logging (different from trace)
 bool nakagami = true;         // enable nakagami path loss
@@ -96,10 +96,10 @@ uint8_t offsets [7] = {2,3,3,1,2,2,3};
 // End configuration
 /////////////////////////////////
 
-	uint32_t 
+	uint32_t
 GetClosestGateway (Ptr<MobilityModel> location)
 {
-	uint32_t closestNode; 
+	uint32_t closestNode;
 	double smallestDistance = 99999999;
 	for (uint32_t i = 0; i<gateways.GetN (); i++)
 	{
@@ -142,7 +142,7 @@ Received (const Ptr<const Packet> packet)
 	copy->RemoveTrailer (trailer);
 	Address addr = (header.GetAddr());
 	std::get<1>(errorMap[addr])++;
-	if ( trailer.GetGateway () == GetClosestGateway (deviceMap[addr]->GetNode ()->GetObject<MobilityModel>())) 
+	if ( trailer.GetGateway () == GetClosestGateway (deviceMap[addr]->GetNode ()->GetObject<MobilityModel>()))
 		std::get<3>(errorMap[addr])++;
 	}
 }
@@ -229,24 +229,24 @@ mainBody ()
 	MobilityHelper mobility;
 	Ptr<ListPositionAllocator> basePositionList = CreateObject<ListPositionAllocator> ();
 	// place gateways in a hexagonal structure
-	basePositionList->Add (Vector (0.0,0.0,0.0)); //network	
+	basePositionList->Add (Vector (0.0,0.0,0.0)); //network
 	// center gateway
 	basePositionList->Add (Vector (length,length,50));
 	// 3 gateway equally spaced around the central gateway
-	basePositionList->Add (Vector (length/2,1866*length/1000,50.0)); //main base station	
-	basePositionList->Add (Vector (length/2,134*length/1000,50.0)); //main base station	
-	basePositionList->Add (Vector (2*length,length,50.0)); //main base station	
+	basePositionList->Add (Vector (length/2,1866*length/1000,50.0)); //main base station
+	basePositionList->Add (Vector (length/2,134*length/1000,50.0)); //main base station
+	basePositionList->Add (Vector (2*length,length,50.0)); //main base station
 	// 3 gateways equally spaced between all other gw's
-	basePositionList->Add (Vector (0,length,50.0)); //main base station	
-	basePositionList->Add (Vector (1.500*length,1866*length/1000,50.0)); //main base station	
-	basePositionList->Add (Vector (1.500*length,134*length/1000,50.0)); //main base station	
-	//basePositionList->Add (Vector (length,length,50.0)); //main base station	
-	//basePositionList->Add (Vector (length/3,length,50.0)); //main base station	
-	//basePositionList->Add (Vector (4*length/3,1.5774*length,50.0)); //main base station	
+	basePositionList->Add (Vector (0,length,50.0)); //main base station
+	basePositionList->Add (Vector (1.500*length,1866*length/1000,50.0)); //main base station
+	basePositionList->Add (Vector (1.500*length,134*length/1000,50.0)); //main base station
+	//basePositionList->Add (Vector (length,length,50.0)); //main base station
+	//basePositionList->Add (Vector (length/3,length,50.0)); //main base station
+	//basePositionList->Add (Vector (4*length/3,1.5774*length,50.0)); //main base station
 	//basePositionList->Add (Vector (length*4/3,.42265*length,50.0)); //main base station
-	//basePositionList->Add (Vector (length*2/3,1.5774*length,50.0)); //main base station	
-	//basePositionList->Add (Vector (length*2/3,.42265*length,50.0)); //main base station	
-	//basePositionList->Add (Vector (5*length/3,length,50.0)); //main base station	
+	//basePositionList->Add (Vector (length*2/3,1.5774*length,50.0)); //main base station
+	//basePositionList->Add (Vector (length*2/3,.42265*length,50.0)); //main base station
+	//basePositionList->Add (Vector (5*length/3,length,50.0)); //main base station
 	mobility.SetPositionAllocator (basePositionList);
 	mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 	mobility.Install(loraBackendNodes);
@@ -324,7 +324,7 @@ mainBody ()
 		for (uint32_t i = 0; i<loraNetDevices.GetN(); i++)
 		{
 			loraNetDevices.Get(i)->SetAttribute("Reliable",BooleanValue(true));
-			
+
 			Ptr<LoRaPhy> temp = StaticCast<LoRaPhy>(StaticCast<LoRaNetDevice>(loraNetDevices.Get(i))->GetPhy());
 		}
 
@@ -356,7 +356,7 @@ mainBody ()
 	address.SetBase ("10.1.1.0", "255.255.255.0");
 	Ipv4InterfaceContainer interfaces = address.Assign (csmaDevices);
 
-	// set addresses 
+	// set addresses
 	std::cout << "Set the addresses" << std::endl;
 	lorahelper.FinishGateways (loraCoordinatorNodes, gateways, interfaces.GetAddress(0));
 	// Reset the power after each succesfull message
@@ -394,7 +394,7 @@ mainBody ()
 
 	// hookup functions to the network for measuring performance
 	loraNetwork->TraceConnectWithoutContext("NetRx",MakeCallback(&ReceivedUnique));
-	loraNetwork->TraceConnectWithoutContext("NetPromiscRx",MakeCallback(&Received));	
+	loraNetwork->TraceConnectWithoutContext("NetPromiscRx",MakeCallback(&Received));
 
 	// Configure interference
 	if (interference)
@@ -426,7 +426,7 @@ mainBody ()
 	return 0;
 }
 
-	int 
+	int
 main (int argc, char** argv)
 {
 	CommandLine cmd;
@@ -470,7 +470,7 @@ main (int argc, char** argv)
 	*m_stream->GetStream() << ", learning " << learning << ", optimized "  << optimized;
 	*m_stream->GetStream() << ", energy " << monitorEnergy << ", iterations "  << iterationCount<<std::endl;
 
-	*m_stream->GetStream() << "ID, transmitted, received, uniquelyReceived, closestReceived, xCoords, yCoords, avgRetransmission, avgDelay, noAck, acksReceived,timeInSimulation,energyleft << std::endl;
+	*m_stream->GetStream() << "ID, transmitted, received, uniquelyReceived, closestReceived, xCoords, yCoords, avgRetransmission, avgDelay, noAck, acksReceived,timeInSimulation,energyleft" << std::endl;
 	for (uint8_t iterationI=0;iterationI<iterationCount;iterationI++){
 		std::cout << "Iteration: " << (int)iterationI << std::endl;
 		mainBody();

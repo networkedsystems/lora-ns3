@@ -89,7 +89,7 @@ namespace ns3 {
 			LoRaNetDevice::DoDispose ();
 		}
 
-	uint32_t 
+	uint32_t
 		LoRaRsNetDevice::GetOffset ()
 		{
 			return m_offset;
@@ -144,7 +144,7 @@ namespace ns3 {
 					m_state = RX1_PENDING;
 
 			}
-			if (Simulator::GetDelayLeft(m_beaconTimeout) <= 0)
+			if (Simulator::GetDelayLeft(m_beaconTimeout) <= Seconds(0))
 			{
 				if (m_state != BEACON && m_state!=RX)
 				{
